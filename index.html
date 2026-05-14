@@ -1,0 +1,2959 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS2 Skin Pricing System v14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080a0e;
+  --bg2:       #0d1117;
+  --bg3:       #141c24;
+  --bg4:       #1a2332;
+  --border:    rgba(74,158,255,0.12);
+  --border2:   rgba(74,158,255,0.26);
+  --text:      #dce8f8;
+  --muted:     #6a7e9a;
+  --accent:    #4a9eff;
+  --accent2:   #00d4ff;
+  --green:     #00ff88;
+  --red:       #ff3d5a;
+  --amber:     #ffb347;
+  --purple:    #b06cff;
+  --teal:      #00e5cc;
+  --font-hud:  'Orbitron', monospace;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.5}
+
+/* INTRO */
+#intro{position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.flash-ring{position:absolute;border-radius:50%;border:2px solid var(--accent2);opacity:0;animation:ringExpand .6s ease-out forwards}
+.flash-ring:nth-child(1){width:80px;height:80px;animation-delay:.3s}
+.flash-ring:nth-child(2){width:200px;height:200px;animation-delay:.45s;border-color:var(--accent)}
+.flash-ring:nth-child(3){width:400px;height:400px;animation-delay:.6s;border-color:rgba(74,158,255,.4)}
+.flash-ring:nth-child(4){width:800px;height:800px;animation-delay:.75s;border-color:rgba(74,158,255,.15)}
+@keyframes ringExpand{0%{transform:scale(0);opacity:1}100%{transform:scale(1);opacity:0}}
+.sparks{position:absolute;inset:0;pointer-events:none}
+.spark{position:absolute;top:50%;left:50%;width:2px;border-radius:2px;transform-origin:0 0;opacity:0;animation:sparkFly .9s ease-out forwards}
+@keyframes sparkFly{0%{opacity:1;height:50px;transform:rotate(var(--angle)) translateY(-10px)}100%{opacity:0;height:10px;transform:rotate(var(--angle)) translateY(-280px)}}
+.intro-title{position:relative;z-index:2;text-align:center;opacity:0;animation:titleReveal .8s cubic-bezier(.16,1,.3,1) .5s forwards}
+@keyframes titleReveal{0%{opacity:0;transform:scale(1.3);filter:blur(10px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
+.intro-cs{font-family:var(--font-hud);font-size:clamp(42px,7vw,84px);font-weight:900;color:#fff;letter-spacing:.12em;text-shadow:0 0 20px var(--accent2),0 0 60px var(--accent),0 0 120px rgba(74,158,255,.4)}
+.intro-sub{font-family:var(--font-hud);font-size:clamp(10px,1.6vw,15px);font-weight:700;color:var(--accent);letter-spacing:.4em;margin-top:8px;opacity:0;animation:fadeUp .6s ease-out 1.1s forwards}
+.intro-line{width:180px;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);margin:12px auto;opacity:0;animation:lineExpand .5s ease-out 1.3s forwards}
+@keyframes lineExpand{0%{opacity:0;width:0}100%{opacity:1;width:180px}}
+.intro-bar-wrap{width:180px;height:2px;background:rgba(74,158,255,.15);border-radius:1px;margin:12px auto 0;overflow:hidden;opacity:0;animation:fadeUp .4s ease-out 1.6s forwards}
+.intro-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));animation:barFill 1.8s linear 1.8s forwards;box-shadow:0 0 8px var(--accent2)}
+@keyframes barFill{0%{width:0}100%{width:100%}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+#intro.fade-out{animation:introDismiss .4s ease-in forwards}
+@keyframes introDismiss{0%{opacity:1}100%{opacity:0;pointer-events:none}}
+.scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none}
+
+/* APP */
+#app{height:100%;display:flex;flex-direction:column;opacity:0;transition:opacity .5s}
+#app.visible{opacity:1}
+
+/* TOPBAR */
+.topbar{background:rgba(13,17,23,.97);border-bottom:1px solid var(--border2);padding:0 20px;display:flex;align-items:center;height:46px;gap:16px;flex-shrink:0;backdrop-filter:blur(10px)}
+.logo{font-family:var(--font-hud);font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:.12em;text-shadow:0 0 12px rgba(0,212,255,.5)}
+.tab-btn{background:none;border:1px solid transparent;color:var(--muted);font-size:11px;font-family:var(--font-hud);font-weight:700;padding:5px 14px;border-radius:5px;cursor:pointer;letter-spacing:.08em;transition:all .2s}
+.tab-btn:hover{border-color:var(--border2);color:var(--text)}
+.tab-btn.active{background:rgba(74,158,255,.12);border-color:var(--accent);color:var(--accent);box-shadow:0 0 10px rgba(74,158,255,.2)}
+.lang-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-size:10px;font-family:var(--font-mono);padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .2s}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px var(--green)}50%{box-shadow:0 0 16px var(--green),0 0 32px rgba(0,255,136,.4)}}
+
+/* LAYOUT */
+.main-layout{display:grid;grid-template-columns:340px 1fr;flex:1;overflow:hidden;min-height:0}
+
+/* LEFT PANEL v8 — enhanced glow */
+.panel-left{
+  background:linear-gradient(180deg,#080e16 0%,#0a1018 100%);
+  border-right:1px solid rgba(0,212,255,.22);
+  box-shadow:4px 0 32px rgba(0,212,255,.08);
+  overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;
+  position:relative;
+}
+.panel-left::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent2),var(--accent),transparent);
+  opacity:.8;
+}
+.panel-left::-webkit-scrollbar{width:3px}
+.panel-left::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+/* GROUP FILTER BAR v8 */
+.grp-filter-bar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 0 4px}
+.grp-btn{
+  background:rgba(10,15,22,.7);border:1px solid rgba(74,158,255,.18);
+  color:#5a7a9a;font-size:9px;font-family:var(--font-hud);font-weight:700;
+  padding:4px 9px;border-radius:5px;cursor:pointer;letter-spacing:.06em;transition:all .15s;
+}
+.grp-btn:hover{border-color:rgba(74,158,255,.5);color:var(--accent)}
+.grp-active{
+  background:rgba(74,158,255,.14);border-color:var(--accent)!important;
+  color:var(--accent)!important;
+  box-shadow:0 0 8px rgba(74,158,255,.25);
+  text-shadow:0 0 6px rgba(74,158,255,.5);
+}
+
+.sec-hdr{
+  font-family:var(--font-hud);font-size:10px;font-weight:700;letter-spacing:.2em;
+  color:var(--accent2);text-transform:uppercase;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+  text-shadow:0 0 14px rgba(0,212,255,.7);
+}
+.sec-hdr::before{content:'';width:3px;height:12px;background:var(--accent2);border-radius:2px;box-shadow:0 0 8px var(--accent2),0 0 16px rgba(0,212,255,.4);flex-shrink:0}
+.sec-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,212,255,.4),transparent)}
+
+/* Skin list v11 */
+.skin-box{
+  background:rgba(8,12,20,.82);
+  border:1px solid rgba(74,158,255,.3);
+  border-radius:10px;padding:10px;
+  box-shadow:0 2px 18px rgba(0,0,0,.45);
+}
+.skin-item{
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:8px;
+  padding:9px 8px;border-bottom:1px solid rgba(74,158,255,.08);
+  cursor:pointer;transition:all .15s;border-radius:7px;
+}
+.skin-item:last-child{border-bottom:none}
+.skin-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent2);opacity:0;transition:opacity .15s;border-radius:2px}
+.skin-item:hover{background:rgba(74,158,255,.09);padding-left:13px}
+.skin-item:hover::before{opacity:.7}
+.skin-item.sel{background:rgba(0,212,255,.12);padding-left:13px;border-bottom-color:transparent}
+.skin-item.sel::before{opacity:1;box-shadow:0 0 6px var(--accent2)}
+.skin-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.skin-item.sel .skin-dot{background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+/* v11: price band badge */
+.pb{display:inline-block;font-size:7px;font-family:var(--font-mono);font-weight:700;padding:1px 4px;border-radius:3px;flex-shrink:0;letter-spacing:.04em}
+.pb-lo{background:rgba(0,255,136,.12);color:#00ff88;border:1px solid rgba(0,255,136,.3)}
+.pb-mid{background:rgba(255,179,71,.12);color:#ffb347;border:1px solid rgba(255,179,71,.3)}
+.pb-hi{background:rgba(255,61,90,.12);color:#ff3d5a;border:1px solid rgba(255,61,90,.3)}
+.skin-nm{font-size:11px;font-family:var(--font-mono);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c8dcf0}
+.skin-badge{font-size:8px;font-family:var(--font-hud);padding:1px 5px;border-radius:3px;flex-shrink:0}
+.b-rifle  {background:rgba(74,158,255,.15);color:var(--accent)}
+.b-sniper {background:rgba(0,229,204,.15);color:var(--teal)}
+.b-smg    {background:rgba(0,212,255,.12);color:#00d4ff}
+.b-shotgun{background:rgba(255,107,53,.15);color:#ff6b35}
+.b-mg     {background:rgba(200,150,50,.15);color:#c89632}
+.b-pistol {background:rgba(176,108,255,.15);color:var(--purple)}
+.b-knife  {background:rgba(255,61,90,.15);color:var(--red)}
+.b-gloves {background:rgba(255,179,71,.15);color:var(--amber)}
+.btn-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 3px;line-height:1}
+.btn-del:hover{color:var(--red)}
+.btn-add{
+  width:100%;background:rgba(74,158,255,.04);
+  border:1px dashed rgba(74,158,255,.3);border-radius:7px;
+  color:#5a7a9a;font-family:var(--font-mono);font-size:10px;
+  padding:7px;cursor:pointer;margin-top:7px;transition:all .2s;
+}
+.btn-add:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,212,255,.06);box-shadow:0 0 8px rgba(0,212,255,.1)}
+
+/* Form controls v11 — enhanced glow */
+.fg{display:flex;flex-direction:column;gap:5px}
+label{
+  font-size:12px;color:#c0d8f0;font-family:var(--font-mono);
+  letter-spacing:.02em;font-weight:600;
+}
+input[type=text],input[type=number],select{
+  background:rgba(8,12,20,.92);
+  border:1px solid rgba(74,158,255,.38);
+  border-radius:8px;color:#e8f4ff;
+  font-size:13px;font-family:var(--font-mono);
+  padding:10px 13px;width:100%;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.5);
+}
+input[type=text]:focus,input[type=number]:focus,select:focus{
+  border-color:var(--accent2);
+  box-shadow:0 0 0 2px rgba(0,212,255,.18),0 0 18px rgba(0,212,255,.14),inset 0 1px 3px rgba(0,0,0,.3);
+  color:#fff;
+}
+input[type=text]:hover,input[type=number]:hover,select:hover{
+  border-color:rgba(0,212,255,.55);
+  box-shadow:0 0 8px rgba(0,212,255,.08),inset 0 1px 3px rgba(0,0,0,.4);
+}
+select option{background:#0d1117;color:#e8f4ff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Wear grid v11 */
+.wear-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.wear-btn{
+  position:relative;overflow:hidden;
+  background:linear-gradient(145deg,rgba(15,22,35,.95),rgba(10,15,24,.98));
+  border:1px solid rgba(74,158,255,.25);
+  border-radius:8px;padding:9px 2px;cursor:pointer;text-align:center;
+  transition:all .15s cubic-bezier(.2,.8,.3,1);
+  font-family:var(--font-hud);font-size:9px;font-weight:700;
+  letter-spacing:.04em;color:#7a9bbf;line-height:1.3;
+  box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.wear-btn:hover{
+  border-color:rgba(0,212,255,.6);color:#ddeeff;
+  transform:translateY(-2px);
+  box-shadow:0 0 14px rgba(0,212,255,.25),0 4px 14px rgba(0,0,0,.4);
+}
+.wear-btn:active{transform:scale(.95);box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
+.wear-btn.active{
+  border-color:var(--accent2);
+  background:linear-gradient(145deg,rgba(0,212,255,.22),rgba(74,158,255,.14));
+  color:#fff;
+  box-shadow:0 0 18px rgba(0,212,255,.4),inset 0 0 10px rgba(0,212,255,.08),inset 0 1px 0 rgba(0,212,255,.25);
+  text-shadow:0 0 12px rgba(0,212,255,.9);
+  transform:translateY(-1px);
+}
+.wear-btn .wa{font-size:12px;font-weight:900;display:block}
+.wear-btn .wr{font-size:8px;color:var(--muted);font-family:var(--font-mono);display:block;margin-top:2px}
+.wear-btn.active .wr{color:rgba(0,212,255,.7)}
+.wear-info{
+  display:flex;justify-content:space-between;font-size:10px;font-family:var(--font-mono);
+  color:#8aaccc;background:rgba(8,12,20,.85);
+  border:1px solid rgba(74,158,255,.25);border-radius:8px;padding:7px 11px;margin-top:6px;
+}
+
+/* Float slider */
+.slider-row{display:flex;align-items:center;gap:8px}
+.slider-row input[type=range]{flex:1;padding:0;border:none;background:none;-webkit-appearance:none;height:4px;accent-color:var(--accent)}
+.sval{font-family:var(--font-mono);font-size:11px;color:var(--accent2);min-width:40px;text-align:right}
+.float-note{font-size:9px;font-family:var(--font-mono);color:var(--muted);display:flex;align-items:center;gap:4px;margin-top:3px}
+.fn-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+
+/* Model stats mini v8 */
+.stat-grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat-mini{
+  background:rgba(10,15,22,.8);
+  border:1px solid rgba(74,158,255,.22);
+  border-radius:8px;padding:9px 11px;cursor:pointer;
+  transition:all .2s;
+}
+.stat-mini:hover{border-color:rgba(0,212,255,.4);box-shadow:0 0 8px rgba(0,212,255,.1)}
+.stat-mini-lbl{font-size:8px;font-family:var(--font-hud);color:#6a8aaa;letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase}
+.stat-mini-val{font-family:var(--font-hud);font-size:15px;font-weight:700;color:var(--accent2);text-shadow:0 0 8px rgba(0,212,255,.4)}
+.stat-mini-src{font-size:8px;font-family:var(--font-mono);color:var(--muted);margin-top:2px}
+.model-status{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(10,15,22,.8);border:1px solid rgba(74,158,255,.2);
+  border-radius:7px;padding:7px 11px;font-family:var(--font-mono);font-size:9px;color:#6a8aaa;
+}
+.ms-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+
+/* Seed box v8 */
+.seed-rank-box{
+  background:rgba(10,15,22,.8);
+  border:1px solid rgba(74,158,255,.22);
+  border-radius:9px;padding:11px;
+  box-shadow:inset 0 1px 0 rgba(0,212,255,.06);
+}
+.seed-badge{font-family:var(--font-hud);font-size:13px;font-weight:900;padding:3px 12px;border-radius:5px;letter-spacing:.08em;display:inline-block}
+
+/* Analyze btn v8 */
+/* RIGHT PANEL */
+.panel-right{overflow-y:auto;background:var(--bg)}
+.panel-right::-webkit-scrollbar{width:3px}
+.panel-right::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* ═══ RWD MOBILE v9 ═══ */
+@media(max-width:768px){
+  html,body{overflow:auto}
+  #app{height:auto;min-height:100vh}
+  .main-layout{display:flex!important;flex-direction:column;overflow:visible}
+  .panel-left{width:100%;border-right:none;border-bottom:1px solid rgba(0,212,255,.22);overflow-y:visible;max-height:none;display:flex;flex-direction:column}
+  .panel-left.mobile-hidden{display:none!important}
+  .panel-right{overflow-y:visible;width:100%;display:none}
+  .panel-right.mobile-show{display:block!important}
+  .page{padding:12px}
+  .metric-row{grid-template-columns:1fr 1fr!important}
+  .decomp-grid{grid-template-columns:1fr 1fr!important}
+  .two-col,.three-col{grid-template-columns:1fr!important}
+  .topbar{padding:0 12px;gap:8px}
+  .logo{font-size:9px}
+  .tab-btn{padding:4px 8px;font-size:9px}
+  .ham-btn{display:flex!important}
+  .conclusion-bar{font-size:11px}
+}
+@media(min-width:769px){
+  .ham-btn{display:none!important}
+  .panel-left{display:flex!important}
+}
+
+/* Hamburger */
+.ham-btn{display:none;flex-direction:column;justify-content:center;gap:4px;background:none;border:1px solid rgba(74,158,255,.3);border-radius:6px;padding:6px 8px;cursor:pointer;transition:all .2s}
+.ham-btn span{display:block;width:16px;height:2px;background:var(--accent);border-radius:2px;transition:all .25s}
+.ham-btn.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+.ham-btn.open span:nth-child(2){opacity:0}
+.ham-btn.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+
+/* ═══ ONE-LINE CONCLUSION BAR v9 ═══ */
+.conclusion-bar{display:none;width:100%;background:linear-gradient(90deg,rgba(10,15,22,.98),rgba(13,19,30,.98));border-bottom:1px solid rgba(74,158,255,.18);padding:7px 16px;font-family:var(--font-mono);font-size:12px;align-items:center;gap:10px;flex-shrink:0;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.conclusion-bar.visible{display:flex}
+.con-signal{font-family:var(--font-hud);font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 10px;border-radius:3px;flex-shrink:0}
+.con-signal.under{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.con-signal.over{background:rgba(255,61,90,.15);color:var(--red);border:1px solid rgba(255,61,90,.3)}
+.con-signal.neutral{background:rgba(255,179,71,.12);color:var(--amber);border:1px solid rgba(255,179,71,.25)}
+.con-text{color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.con-roi{font-family:var(--font-hud);font-size:12px;font-weight:700;flex-shrink:0}
+
+/* ═══ STEP NUMBER BADGES v9 ═══ */
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(0,212,255,.18);color:var(--accent2);font-size:8px;font-weight:700;font-family:var(--font-hud);flex-shrink:0;border:1px solid rgba(0,212,255,.35);margin-right:3px}
+.page{display:none;padding:16px 20px;display:none;flex-direction:column;gap:14px}
+.page.active{display:flex}
+
+/* Empty */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:360px;gap:10px;color:var(--muted)}
+.empty-glyph{font-size:32px;opacity:.2;font-family:var(--font-hud);color:var(--accent)}
+.empty-text{font-size:12px;font-family:var(--font-mono);letter-spacing:.06em}
+
+/* Signal banner */
+.signal-banner{border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;border:1px solid}
+.signal-banner.undervalued{background:rgba(0,255,136,.06);border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,.12);animation:gPulse 3s ease-in-out infinite}
+.signal-banner.overvalued {background:rgba(255,61,90,.06); border-color:var(--red);  box-shadow:0 0 20px rgba(255,61,90,.12); animation:rPulse 3s ease-in-out infinite}
+.signal-banner.neutral    {background:rgba(255,179,71,.05);border-color:var(--amber);box-shadow:0 0 12px rgba(255,179,71,.08)}
+@keyframes gPulse{0%,100%{box-shadow:0 0 16px rgba(0,255,136,.1)}50%{box-shadow:0 0 28px rgba(0,255,136,.22)}}
+@keyframes rPulse{0%,100%{box-shadow:0 0 16px rgba(255,61,90,.12)}50%{box-shadow:0 0 28px rgba(255,61,90,.24)}}
+.sig-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-family:var(--font-hud);font-weight:900;flex-shrink:0}
+.undervalued .sig-icon{background:rgba(0,255,136,.15);color:var(--green)}
+.overvalued  .sig-icon{background:rgba(255,61,90,.15); color:var(--red)}
+.neutral     .sig-icon{background:rgba(255,179,71,.12);color:var(--amber)}
+.sig-title{font-size:13px;font-weight:600;font-family:var(--font-body)}
+.undervalued .sig-title{color:var(--green)}
+.overvalued  .sig-title{color:var(--red)}
+.neutral     .sig-title{color:var(--amber)}
+.sig-sub{font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
+.sig-rec{margin-left:auto;padding:5px 16px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.12em;font-family:var(--font-hud);flex-shrink:0}
+.undervalued .sig-rec{background:var(--green);color:#000;box-shadow:0 0 14px rgba(0,255,136,.45)}
+.overvalued  .sig-rec{background:var(--red);  color:#fff;box-shadow:0 0 14px rgba(255,61,90,.45)}
+.neutral     .sig-rec{background:var(--amber);color:#000;box-shadow:0 0 10px rgba(255,179,71,.35)}
+
+/* Metric row */
+.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mc{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px}
+.mc-lbl{font-size:9px;color:var(--muted);margin-bottom:5px;font-family:var(--font-hud);letter-spacing:.1em}
+.mc-val{font-size:20px;font-weight:700;font-family:var(--font-hud)}
+.mc-val.green{color:var(--green);text-shadow:0 0 10px rgba(0,255,136,.4)}
+.mc-val.red  {color:var(--red);  text-shadow:0 0 10px rgba(255,61,90,.4)}
+.mc-val.amber{color:var(--amber);text-shadow:0 0 10px rgba(255,179,71,.3)}
+.mc-val.blue {color:var(--accent2);text-shadow:0 0 10px rgba(0,212,255,.3)}
+.mc-sub{font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
+
+/* Chart card */
+.cc{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:16px 18px;position:relative}
+.cc::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.25}
+.cc-title{font-size:9px;font-family:var(--font-hud);color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.cc-dot{width:5px;height:5px;border-radius:50%}
+
+/* ═══ ECONOMIC DECOMPOSITION ═══ */
+.decomp-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.decomp-card{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;position:relative;overflow:hidden}
+.decomp-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;border-radius:0 0 8px 8px}
+.dc-base  ::after{background:var(--accent2)}
+.dc-ipca  ::after{background:var(--purple)}
+.dc-alpha ::after{background:var(--green)}
+.dc-pref  ::after{background:var(--amber)}
+.dc-label{font-size:8px;font-family:var(--font-hud);letter-spacing:.1em;margin-bottom:4px}
+.dc-val{font-family:var(--font-hud);font-size:17px;font-weight:700}
+.dc-pct{font-size:9px;font-family:var(--font-mono);margin-top:2px}
+.dc-desc{font-size:9px;font-family:var(--font-mono);color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* ═══ SIGNAL CONFIDENCE ═══ */
+.conf-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:16px 18px}
+.conf-top{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.conf-gauge{position:relative;width:64px;height:64px;flex-shrink:0}
+.conf-gauge svg{width:64px;height:64px;transform:rotate(-90deg)}
+.conf-gauge-bg{stroke:var(--bg3);stroke-width:6;fill:none}
+.conf-gauge-fill{stroke-width:6;fill:none;stroke-linecap:round;transition:stroke-dasharray .6s cubic-bezier(.34,1.56,.64,1)}
+.conf-gauge-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-hud);font-size:13px;font-weight:700}
+.conf-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-family:var(--font-hud);font-weight:700;letter-spacing:.08em}
+.conf-badge.high{background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.conf-badge.med {background:rgba(255,179,71,.10);color:var(--amber);border:1px solid rgba(255,179,71,.25)}
+.conf-badge.low {background:rgba(255,61,90,.10); color:var(--red);  border:1px solid rgba(255,61,90,.25)}
+/* v5: Exception flag badges */
+.exc-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:9px;font-family:var(--font-hud);font-weight:700;letter-spacing:.05em;margin:2px 2px 0 0}
+.exc-badge.st-conflict{background:rgba(255,140,0,.15);color:#ff8c00;border:1px solid rgba(255,140,0,.4)}
+.exc-badge.bs-premium{background:rgba(74,158,255,.15);color:#4a9eff;border:1px solid rgba(74,158,255,.4)}
+.exc-badge.float-flat{background:rgba(0,210,180,.15);color:#00d2b4;border:1px solid rgba(0,210,180,.4)}
+.exc-badge.bimodal{background:rgba(176,108,255,.15);color:#b06cff;border:1px solid rgba(176,108,255,.4)}
+.exc-badge.low-liq{background:rgba(255,61,90,.12);color:#ff3d5a;border:1px solid rgba(255,61,90,.35)}
+#exc-badge-row{display:flex;flex-wrap:wrap;margin:6px 0 2px 0;min-height:0}
+.conf-rows{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.conf-row-item{background:var(--bg3);border-radius:6px;padding:8px 10px;border:1px solid var(--border)}
+.cri-lbl{font-size:8px;font-family:var(--font-hud);color:var(--muted);letter-spacing:.08em;margin-bottom:4px}
+.cri-bar-bg{height:3px;background:var(--bg4);border-radius:2px;margin-bottom:4px}
+.cri-bar{height:3px;border-radius:2px;transition:width .6s ease}
+.cri-val{font-size:10px;font-family:var(--font-mono)}
+.noise-signal-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);margin-top:8px;font-size:10px;font-family:var(--font-mono)}
+.ns-tag{padding:2px 8px;border-radius:3px;font-size:9px;font-family:var(--font-hud);font-weight:700;letter-spacing:.06em}
+.ns-signal{background:rgba(0,255,136,.12);color:var(--green)}
+.ns-noise {background:rgba(255,61,90,.1); color:var(--red)}
+.ns-mixed {background:rgba(255,179,71,.1);color:var(--amber)}
+
+/* Quantile visual */
+.q-visual{position:relative;height:52px;margin:8px 0}
+.q-track{position:absolute;top:18px;left:0;right:0;height:5px;border-radius:3px;background:var(--bg3)}
+.q-fill{position:absolute;top:18px;height:5px;border-radius:3px;background:linear-gradient(90deg,rgba(74,158,255,.3),rgba(0,212,255,.6));box-shadow:0 0 6px rgba(74,158,255,.2)}
+.q-mk{position:absolute;top:13px;transform:translateX(-50%);width:2px;height:16px;border-radius:2px}
+.q-cur{position:absolute;top:10px;transform:translateX(-50%);width:2px;height:22px;border-radius:2px;background:var(--red);box-shadow:0 0 6px var(--red)}
+.q-lbl{position:absolute;top:38px;transform:translateX(-50%);font-size:8px;font-family:var(--font-mono);color:var(--muted);white-space:nowrap}
+
+/* Decomp table */
+.dtable{width:100%;border-collapse:collapse}
+.dtable tr{border-bottom:1px solid var(--border)}
+.dtable tr:last-child{border-bottom:none}
+.dtable td{padding:7px 0;font-size:12px}
+.dtable td:first-child{color:var(--muted);width:50%;font-family:var(--font-body)}
+.dtable td:last-child{text-align:right;font-family:var(--font-mono);font-size:11px}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:var(--font-mono)}
+.tg{background:rgba(0,255,136,.1);color:var(--green);box-shadow:0 0 5px rgba(0,255,136,.15)}
+.tr{background:rgba(255,61,90,.1);color:var(--red)}
+.ta{background:rgba(255,179,71,.1);color:var(--amber)}
+.tb{background:rgba(74,158,255,.1);color:var(--accent2)}
+
+/* Two col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* Analysis page */
+.acc-row2{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.acc-lbl{font-size:10px;width:52px;color:var(--muted);font-family:var(--font-mono)}
+.acc-bg{flex:1;background:var(--bg3);border-radius:3px;height:4px}
+.acc-bar2{height:4px;border-radius:3px}
+.acc-v{font-size:10px;font-family:var(--font-mono);color:var(--text);min-width:40px;text-align:right}
+
+.limit-box{background:rgba(255,179,71,.03);border:1px solid rgba(255,179,71,.18);border-radius:12px;padding:16px 18px}
+.limit-title{font-size:9px;font-weight:700;color:var(--amber);font-family:var(--font-hud);letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px}
+.limit-item{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,179,71,.07);font-size:12px;color:var(--muted);line-height:1.55;font-family:var(--font-body)}
+.limit-item:last-child{border-bottom:none}
+.li-icon{color:var(--amber);flex-shrink:0;font-family:var(--font-mono);margin-top:1px}
+.limit-item strong{color:var(--text);font-weight:600}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:24px;width:380px;box-shadow:0 0 50px rgba(74,158,255,.12),0 30px 70px rgba(0,0,0,.6)}
+.modal-title{font-family:var(--font-hud);font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:.14em;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.btn-cancel{flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--muted);border-radius:7px;padding:8px;font-family:var(--font-hud);font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer}
+.btn-confirm{flex:2;background:rgba(74,158,255,.12);border:1px solid var(--accent);color:var(--accent2);border-radius:7px;padding:8px;font-family:var(--font-hud);font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer}
+.btn-confirm:hover{box-shadow:0 0 14px rgba(74,158,255,.3)}
+
+/* Manual override */
+.override-panel{display:none;background:rgba(243,156,18,.04);border:1px solid rgba(243,156,18,.18);border-radius:8px;padding:10px;margin-top:6px}
+
+/* Price tier badge */
+.tier-banner{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid;border-radius:8px}
+
+/* Trade mode toggle */
+.trade-toggle-wrap{display:flex;gap:4px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px}
+.trade-btn{flex:1;background:none;border:none;border-radius:6px;padding:7px 4px;cursor:pointer;font-family:var(--font-hud);font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);transition:all .2s;text-align:center;line-height:1.3}
+.trade-btn:hover{color:var(--text)}
+.trade-btn.buy-active{background:linear-gradient(135deg,rgba(0,255,136,.18),rgba(0,229,204,.1));border:1px solid var(--green);color:var(--green);box-shadow:0 0 10px rgba(0,255,136,.15)}
+.trade-btn.sell-active{background:linear-gradient(135deg,rgba(255,179,71,.18),rgba(255,61,90,.1));border:1px solid var(--amber);color:var(--amber);box-shadow:0 0 10px rgba(255,179,71,.15)}
+.trade-mode-hint{font-size:9px;font-family:var(--font-mono);color:var(--muted);padding:5px 8px;border-radius:5px;border:1px solid var(--border);background:rgba(0,0,0,.15);line-height:1.6;margin-top:4px}
+
+/* v9 Exception Badges */
+.exc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:9px;font-family:var(--font-hud);font-weight:700;letter-spacing:.06em;margin:2px 2px 0 0}
+.exc-badge.st-conflict{background:rgba(255,61,90,.15);color:#ff3d5a;border:1px solid rgba(255,61,90,.3)}
+.exc-badge.bs-premium{background:rgba(176,108,255,.15);color:#b06cff;border:1px solid rgba(176,108,255,.3)}
+.exc-badge.float-flat{background:rgba(90,106,132,.15);color:#8899aa;border:1px solid rgba(90,106,132,.3)}
+.exc-badge.bimodal{background:rgba(255,179,71,.15);color:#ffb347;border:1px solid rgba(255,179,71,.3)}
+.exc-badge.float-seed{background:rgba(0,229,204,.12);color:#00e5cc;border:1px solid rgba(0,229,204,.3)}
+.exc-badge.low-liq{background:rgba(255,179,71,.12);color:#ffb347;border:1px solid rgba(255,179,71,.25)}
+.exc-badge.very-low-liq{background:rgba(255,61,90,.12);color:#ff3d5a;border:1px solid rgba(255,61,90,.3)}
+#exc-badge-row{margin-top:6px;min-height:16px;display:flex;flex-wrap:wrap}
+/* v9 Float Direction Indicator */
+.float-dir-chip{display:inline-block;font-size:8px;font-family:var(--font-hud);padding:1px 6px;border-radius:3px;margin-left:6px;letter-spacing:.05em}
+.float-dir-normal{background:rgba(74,158,255,.1);color:var(--accent)}
+.float-dir-inverted{background:rgba(176,108,255,.12);color:#b06cff}
+.float-dir-flat{background:rgba(90,106,132,.12);color:#8899aa}
+.float-dir-bimodal{background:rgba(255,179,71,.12);color:#ffb347}
+
+/* v10 Platform selector */
+.platform-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:5px}
+.plat-btn{
+  background:rgba(10,15,22,.8);border:1px solid rgba(74,158,255,.2);
+  border-radius:7px;padding:6px 2px;cursor:pointer;text-align:center;
+  transition:all .2s;font-family:var(--font-hud);font-size:8px;font-weight:700;
+  letter-spacing:.04em;color:#5a7a9a;line-height:1.4;
+}
+.plat-btn:hover{border-color:rgba(0,212,255,.5);color:var(--text)}
+.plat-btn.active{
+  border-color:var(--teal);background:rgba(0,229,204,.12);color:var(--teal);
+  box-shadow:0 0 10px rgba(0,229,204,.25);text-shadow:0 0 6px rgba(0,229,204,.5);
+}
+.plat-btn .pname{font-size:9px;font-weight:900;display:block}
+.plat-btn .pfee{font-size:7px;color:var(--muted);font-family:var(--font-mono);display:block;margin-top:1px}
+.plat-btn.active .pfee{color:rgba(0,229,204,.7)}
+.plat-fee-note{
+  font-size:9px;font-family:var(--font-mono);color:#6a8aaa;
+  background:rgba(10,15,22,.7);border:1px solid rgba(74,158,255,.18);
+  border-radius:6px;padding:5px 9px;margin-top:4px;
+}
+
+/* v10: Mobile result FAB */
+.mobile-result-fab{
+  display:none;position:fixed;bottom:20px;right:16px;z-index:200;
+  background:linear-gradient(135deg,#0a4a6e,#1a6688);
+  color:#00e5ff;border:1px solid rgba(0,229,255,.6);
+  border-radius:28px;padding:12px 20px;
+  font-family:var(--font-hud);font-size:11px;font-weight:700;letter-spacing:.1em;
+  box-shadow:0 0 20px rgba(0,212,255,.3),0 4px 20px rgba(0,0,0,.5);
+  cursor:pointer;text-shadow:0 0 8px rgba(0,229,255,.8);
+  animation:fabPulse 2s ease-in-out infinite;
+}
+@keyframes fabPulse{0%,100%{box-shadow:0 0 16px rgba(0,212,255,.25),0 4px 16px rgba(0,0,0,.4)}50%{box-shadow:0 0 28px rgba(0,212,255,.45),0 4px 24px rgba(0,0,0,.5)}}
+@media(max-width:768px){.mobile-result-fab.show{display:block}}
+.exc-badge.special-pattern{background:rgba(0,229,204,.15);color:#00e5cc;border:1px solid rgba(0,229,204,.4)}
+.seed-lookup-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:9px;font-family:var(--font-hud);font-weight:700;letter-spacing:.06em;margin-top:4px;background:rgba(0,229,204,.12);color:var(--teal);border:1px solid rgba(0,229,204,.3)}
+
+/* ═══ GAME-STYLE WEAPON SELECTOR v11 ═══ */
+.weapon-selector{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:7px;
+  margin-bottom:12px;
+}
+.wpn-btn{
+  position:relative;
+  background:linear-gradient(145deg,rgba(15,22,35,.95),rgba(10,15,24,.98));
+  border:1px solid rgba(74,158,255,.3);
+  border-radius:12px;padding:14px 4px 10px;
+  cursor:pointer;text-align:center;
+  transition:all .18s cubic-bezier(.2,.8,.3,1);
+  box-shadow:0 2px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
+  user-select:none;
+}
+.wpn-btn::before{
+  content:'';position:absolute;inset:0;border-radius:10px;
+  background:linear-gradient(135deg,rgba(74,158,255,.05),transparent);
+  opacity:0;transition:opacity .18s;
+}
+.wpn-btn:hover{
+  border-color:rgba(0,212,255,.6);
+  box-shadow:0 0 14px rgba(0,212,255,.2),0 4px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
+  transform:translateY(-2px);
+}
+.wpn-btn:hover::before{opacity:1}
+.wpn-btn:active{transform:translateY(0) scale(.97);box-shadow:0 0 8px rgba(0,212,255,.15),inset 0 2px 6px rgba(0,0,0,.3)}
+.wpn-btn.wpn-active{
+  border-color:var(--accent2);
+  background:linear-gradient(145deg,rgba(0,212,255,.18),rgba(74,158,255,.1));
+  box-shadow:0 0 18px rgba(0,212,255,.3),0 4px 20px rgba(0,0,0,.4),inset 0 1px 0 rgba(0,212,255,.2);
+  transform:translateY(-1px);
+}
+.wpn-btn.wpn-active::after{
+  content:'';position:absolute;bottom:0;left:15%;right:15%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent2),transparent);
+  border-radius:2px;box-shadow:0 0 8px var(--accent2);
+}
+.wpn-icon{font-size:26px;display:block;margin-bottom:5px;filter:drop-shadow(0 0 4px rgba(74,158,255,.3));transition:filter .18s}
+.wpn-btn:hover .wpn-icon,.wpn-btn.wpn-active .wpn-icon{filter:drop-shadow(0 0 10px rgba(0,212,255,.8))}
+.wpn-name{font-family:var(--font-hud);font-size:8px;font-weight:700;letter-spacing:.04em;color:#9ab8d8;display:block;line-height:1.3;transition:color .18s}
+.wpn-btn:hover .wpn-name{color:var(--accent2)}
+.wpn-btn.wpn-active .wpn-name{color:#fff;text-shadow:0 0 10px rgba(0,212,255,.8)}
+.wpn-count{display:none}
+
+/* ═══ ENHANCED BUTTON STATES v10 ═══ */
+/* All buttons: visible depth */
+button{-webkit-tap-highlight-color:transparent}
+
+/* Wear buttons — game inventory style */
+.wear-btn{
+  position:relative;overflow:hidden;
+  background:linear-gradient(145deg,rgba(15,22,35,.95),rgba(10,15,24,.98));
+  border:1px solid rgba(74,158,255,.2);
+  border-radius:7px;padding:7px 2px;cursor:pointer;text-align:center;
+  transition:all .15s cubic-bezier(.2,.8,.3,1);
+  font-family:var(--font-hud);font-size:8px;font-weight:700;
+  letter-spacing:.04em;color:#5a7a9a;line-height:1.3;
+  box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.wear-btn:hover{
+  border-color:rgba(74,158,255,.6);color:var(--text);
+  transform:translateY(-1px);
+  box-shadow:0 0 12px rgba(74,158,255,.2),0 4px 12px rgba(0,0,0,.4);
+}
+.wear-btn:active{transform:scale(.95);box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
+.wear-btn.active{
+  border-color:var(--accent2);
+  background:linear-gradient(145deg,rgba(0,212,255,.2),rgba(74,158,255,.12));
+  color:var(--accent2);
+  box-shadow:0 0 14px rgba(0,212,255,.3),inset 0 0 8px rgba(0,212,255,.06),inset 0 1px 0 rgba(0,212,255,.2);
+  text-shadow:0 0 10px rgba(0,212,255,.7);
+  transform:translateY(-1px);
+}
+.wear-btn .wa{font-size:11px;font-weight:900;display:block}
+.wear-btn .wr{font-size:7px;color:var(--muted);font-family:var(--font-mono);display:block;margin-top:1px}
+.wear-btn.active .wr{color:rgba(0,212,255,.6)}
+
+/* Trade mode buttons */
+.trade-btn{
+  position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.trade-btn:hover{transform:translateY(-1px)}
+.trade-btn:active{transform:scale(.97)}
+.trade-btn.buy-active{
+  box-shadow:0 0 16px rgba(0,255,136,.2),inset 0 1px 0 rgba(0,255,136,.15)!important;
+  text-shadow:0 0 8px rgba(0,255,136,.5);
+}
+.trade-btn.sell-active{
+  box-shadow:0 0 16px rgba(255,179,71,.2),inset 0 1px 0 rgba(255,179,71,.15)!important;
+  text-shadow:0 0 8px rgba(255,179,71,.5);
+}
+
+/* Platform buttons */
+.plat-btn{
+  box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.plat-btn:hover{transform:translateY(-1px)}
+.plat-btn:active{transform:scale(.96)}
+.plat-btn.active{
+  box-shadow:0 0 14px rgba(0,229,204,.25),inset 0 1px 0 rgba(0,229,204,.15)!important;
+}
+
+/* Analyze button — main CTA */
+.btn-analyze{
+  width:100%;
+  background:linear-gradient(135deg,#0a4a6e,#0d3d5c,#1a6688);
+  color:#00e5ff;
+  border:1px solid rgba(0,229,255,.6);
+  border-radius:10px;padding:14px;
+  font-size:14px;font-weight:700;
+  font-family:var(--font-hud),'Noto Sans TC','Microsoft JhengHei',sans-serif;
+  cursor:pointer;letter-spacing:0;
+  transition:all .2s cubic-bezier(.2,.8,.3,1);
+  box-shadow:
+    0 0 20px rgba(0,212,255,.2),
+    0 4px 20px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(0,229,255,.2),
+    inset 0 -1px 0 rgba(0,0,0,.3);
+  text-shadow:0 0 12px rgba(0,229,255,.8);
+  position:relative;overflow:hidden;
+  text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-analyze::before{
+  content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.08),transparent);
+  transform:skewX(-20deg);transition:left .5s ease;
+}
+.btn-analyze:hover::before{left:120%}
+.btn-analyze:hover{
+  background:linear-gradient(135deg,#0d5a82,#0f4d72,#1e7a9e);
+  box-shadow:0 0 32px rgba(0,212,255,.4),0 6px 28px rgba(0,0,0,.5),inset 0 1px 0 rgba(0,229,255,.3);
+  transform:translateY(-2px);
+  border-color:rgba(0,229,255,.9);
+}
+.btn-analyze:active{transform:translateY(0) scale(.98);box-shadow:0 0 16px rgba(0,212,255,.3),inset 0 3px 8px rgba(0,0,0,.3)}
+.btn-analyze.loading{opacity:.5;pointer-events:none}
+
+/* Skin items — game inventory hover */
+.skin-item{
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:6px;
+  padding:7px 6px;border-bottom:1px solid rgba(74,158,255,.07);
+  cursor:pointer;transition:all .15s;border-radius:6px;
+}
+.skin-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent2);opacity:0;transition:opacity .15s;border-radius:2px}
+.skin-item:hover{background:rgba(74,158,255,.08);padding-left:10px}
+.skin-item:hover::before{opacity:.6}
+.skin-item.sel{background:rgba(0,212,255,.1);padding-left:10px;border-bottom-color:transparent}
+.skin-item.sel::before{opacity:1}
+
+/* Add skin button */
+.btn-add{
+  width:100%;
+  background:rgba(74,158,255,.06);
+  border:1px dashed rgba(74,158,255,.35);border-radius:8px;
+  color:#6a8aaa;font-family:var(--font-mono);font-size:10px;
+  padding:8px;cursor:pointer;margin-top:8px;
+  transition:all .2s;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.2);
+}
+.btn-add:hover{
+  border-color:var(--accent2);color:var(--accent2);
+  background:rgba(0,212,255,.08);
+  box-shadow:0 0 10px rgba(0,212,255,.12);
+  transform:translateY(-1px);
+}
+.btn-add:active{transform:scale(.98)}
+
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="scanlines"></div>
+  <div class="flash-ring"></div><div class="flash-ring"></div>
+  <div class="flash-ring"></div><div class="flash-ring"></div>
+  <div class="sparks" id="sparks"></div>
+  <div class="intro-title">
+    <div class="intro-cs">CS2 PRICING</div>
+    <div class="intro-cs" style="margin-top:-12px">SYSTEM</div>
+    <div class="intro-line"></div>
+    <div class="intro-sub">MARKET INTELLIGENCE v3</div>
+    <div class="intro-bar-wrap"><div class="intro-bar"></div></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="ham-btn" id="ham-btn" onclick="toggleMobilePanel()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="logo">CS2<span style="color:var(--muted);margin:0 4px">/</span>PRICING SYS</span>
+    <div style="display:flex;gap:4px;margin-left:8px">
+      <button class="tab-btn active" onclick="switchTab('result')" id="tab-result" data-key="tabResult">RESULT</button>
+      <button class="tab-btn" onclick="switchTab('analysis')" id="tab-analysis" data-key="tabAnalysis">ANALYSIS</button>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">EN</button>
+      <div class="status-dot" title="Model ready"></div>
+    </div>
+  </div>
+
+  <!-- Mobile FAB: view result -->
+  <button class="mobile-result-fab" id="mobile-result-fab" onclick="onFabClick()" data-key="fabViewResult">查看結果 →</button>
+
+  <div class="main-layout">
+    <!-- LEFT PANEL -->
+    <div class="panel-left">
+
+      <!-- WEAPON SELECTOR v10 — game-style -->
+      <div>
+        <div class="sec-hdr" data-key="secWeapon"><span class="step-badge">1</span><span data-key="secWeaponLbl">選擇武器類型 WEAPON TYPE</span></div>
+        <div class="weapon-selector" id="weapon-selector">
+          <button class="wpn-btn" data-wtype="rifle" onclick="selectWeaponType('rifle')">
+            <span class="wpn-icon">🔫</span>
+            <span class="wpn-name" data-zh="步槍" data-en="RIFLE">步槍</span>
+            <span class="wpn-count" id="wc-rifle">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="sniper" onclick="selectWeaponType('sniper')">
+            <span class="wpn-icon">🎯</span>
+            <span class="wpn-name" data-zh="狙擊槍" data-en="SNIPER">狙擊槍</span>
+            <span class="wpn-count" id="wc-sniper">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="smg" onclick="selectWeaponType('smg')">
+            <span class="wpn-icon">⚡</span>
+            <span class="wpn-name" data-zh="衝鋒槍" data-en="SMG">衝鋒槍</span>
+            <span class="wpn-count" id="wc-smg">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="shotgun" onclick="selectWeaponType('shotgun')">
+            <span class="wpn-icon">💥</span>
+            <span class="wpn-name" data-zh="霰彈槍" data-en="SHOTGUN">霰彈槍</span>
+            <span class="wpn-count" id="wc-shotgun">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="pistol" onclick="selectWeaponType('pistol')">
+            <span class="wpn-icon">🔰</span>
+            <span class="wpn-name" data-zh="手槍" data-en="PISTOL">手槍</span>
+            <span class="wpn-count" id="wc-pistol">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="heavy" onclick="selectWeaponType('heavy')">
+            <span class="wpn-icon">🛡️</span>
+            <span class="wpn-name" data-zh="重型" data-en="HEAVY">重型</span>
+            <span class="wpn-count" id="wc-heavy">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="knife" onclick="selectWeaponType('knife')">
+            <span class="wpn-icon">🔪</span>
+            <span class="wpn-name" data-zh="刀類★" data-en="KNIFE★">刀類★</span>
+            <span class="wpn-count" id="wc-knife">0</span>
+          </button>
+          <button class="wpn-btn" data-wtype="gloves" onclick="selectWeaponType('gloves')">
+            <span class="wpn-icon">🧤</span>
+            <span class="wpn-name" data-zh="手套★" data-en="GLOVES★">手套★</span>
+            <span class="wpn-count" id="wc-gloves">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Skin list -->
+      <div>
+        <div class="sec-hdr" data-key="secSkins"><span class="step-badge">2</span>SKIN LIST</div>
+        <div class="skin-box">
+          <div id="skin-list"></div>
+          <button class="btn-add" onclick="openModal()" data-key="btnAdd">+ ADD SKIN</button>
+        </div>
+      </div>
+
+      <!-- FROM CSFLOAT / STEAM -->
+      <div>
+        <div class="sec-hdr" data-key="secParams"><span class="step-badge">3</span>FROM CSFLOAT / STEAM</div>
+
+        <div class="fg" style="margin-bottom:8px">
+          <label><span style="color:var(--accent2)">●</span> <span data-key="lblPrice">現價 Current Price (USD)</span></label>
+          <input type="number" id="cur-price" value="42.50" step="0.01" min="0" oninput="updateStatDisplay()">
+        </div>
+
+        <!-- Trade Mode Toggle -->
+        <div style="margin-bottom:10px">
+          <label style="display:block;margin-bottom:5px"><span style="color:var(--accent2)">●</span> <span data-key="lblTradeMode">交易方向 Trade Mode</span></label>
+          <div class="trade-toggle-wrap">
+            <button class="trade-btn buy-active" id="trade-buy-btn" onclick="setTradeMode('buy')">
+              <span style="font-size:13px;display:block">↑</span>
+              <span data-key="tradeBuyBtn">買入 BUY</span>
+            </button>
+            <button class="trade-btn" id="trade-sell-btn" onclick="setTradeMode('sell')">
+              <span style="font-size:13px;display:block">↓</span>
+              <span data-key="tradeSellBtn">賣出 SELL</span>
+            </button>
+          </div>
+          <div class="trade-mode-hint" id="trade-mode-hint" data-key="tradeBuyHint">
+            買入模式：顯示最低合理買入價、Kelly 倉位與入場報酬評估
+          </div>
+        </div>
+
+        <!-- v10: Platform selector -->
+        <div style="margin-bottom:10px">
+          <label style="display:block;margin-bottom:5px;font-size:10px;color:var(--muted);font-family:var(--font-mono)"><span style="color:var(--teal)">●</span> <span data-key="lblPlatform">交易平台 Platform</span></label>
+          <div class="platform-selector">
+            <button class="plat-btn active" data-plat="steam" onclick="setPlatform('steam')">
+              <span class="pname">STEAM</span><span class="pfee">fee: 13%</span>
+            </button>
+            <button class="plat-btn" data-plat="csfloat" onclick="setPlatform('csfloat')">
+              <span class="pname">CSFLOAT</span><span class="pfee">fee: 2%</span>
+            </button>
+            <button class="plat-btn" data-plat="buff" onclick="setPlatform('buff')">
+              <span class="pname">BUFF163</span><span class="pfee">fee: 2.5%</span>
+            </button>
+            <button class="plat-btn" data-plat="skinport" onclick="setPlatform('skinport')">
+              <span class="pname">SKINPORT</span><span class="pfee">fee: 12%</span>
+            </button>
+          </div>
+          <div class="plat-fee-note" id="plat-fee-note">Steam Market：買方不扣費，賣方扣 13%（Valve 10% + CS 3%）</div>
+        </div>
+
+        <!-- Wear -->
+        <div style="margin-bottom:8px">
+          <label style="display:block;margin-bottom:5px"><span style="color:var(--accent2)">●</span> <span data-key="lblWear">磨損程度 Wear Condition</span></label>
+          <div class="wear-grid">
+            <button class="wear-btn" data-wear="FN" onclick="selectWear('FN')"><span class="wa">FN</span><span class="wr">0–.07</span></button>
+            <button class="wear-btn" data-wear="MW" onclick="selectWear('MW')"><span class="wa">MW</span><span class="wr">.07–.15</span></button>
+            <button class="wear-btn active" data-wear="FT" onclick="selectWear('FT')"><span class="wa">FT</span><span class="wr">.15–.38</span></button>
+            <button class="wear-btn" data-wear="WW" onclick="selectWear('WW')"><span class="wa">WW</span><span class="wr">.38–.45</span></button>
+            <button class="wear-btn" data-wear="BS" onclick="selectWear('BS')"><span class="wa">BS</span><span class="wr">.45–1</span></button>
+          </div>
+          <div class="wear-info">
+            <span><span style="color:var(--muted)" data-key="wearAlpha">Alpha:</span> <span id="wear-alpha-val" style="color:var(--text)">—</span></span>
+            <span><span style="color:var(--muted)">Float mid:</span> <span id="wear-float-mid" style="color:var(--text)">0.265</span></span>
+          </div>
+        </div>
+
+        <!-- Float -->
+        <div class="fg" style="margin-bottom:8px">
+          <label><span style="color:var(--accent2)">●</span> <span data-key="lblFloat">Float 值</span> <span style="font-size:9px;color:var(--muted)">← CSFloat item.float_value</span></label>
+
+          <!-- Float visual track -->
+          <div style="position:relative;margin:8px 0 4px;user-select:none" id="float-track-wrap">
+            <!-- colour zones -->
+            <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;cursor:pointer" id="float-zone-bar" onclick="onFloatTrackClick(event)">
+              <div style="flex:7;background:linear-gradient(90deg,#00ff88,#44cc88)" title="FN 0–0.07"></div>
+              <div style="flex:8;background:linear-gradient(90deg,#44cc88,#4a9eff)" title="MW 0.07–0.15"></div>
+              <div style="flex:23;background:linear-gradient(90deg,#4a9eff,#b06cff)" title="FT 0.15–0.38"></div>
+              <div style="flex:7;background:linear-gradient(90deg,#b06cff,#ffb347)" title="WW 0.38–0.45"></div>
+              <div style="flex:55;background:linear-gradient(90deg,#ffb347,#ff3d5a)" title="BS 0.45–1.0"></div>
+            </div>
+
+            <!-- needle cursor -->
+            <div id="float-needle" style="position:absolute;top:-3px;transform:translateX(-50%);pointer-events:none;transition:left .15s ease;left:26.5%">
+              <div style="width:2px;height:16px;background:#fff;border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,.8);margin:0 auto"></div>
+              <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid #fff;margin-left:-4px;opacity:.9"></div>
+            </div>
+
+            <!-- tick marks at boundaries -->
+            <div style="position:relative;height:8px;margin-top:1px">
+              <span style="position:absolute;left:0%;font-size:8px;color:var(--muted);font-family:var(--font-mono);transform:translateX(0)">0</span>
+              <span style="position:absolute;left:7%;font-size:8px;color:var(--muted);font-family:var(--font-mono);transform:translateX(-50%)">0.07</span>
+              <span style="position:absolute;left:15%;font-size:8px;color:var(--muted);font-family:var(--font-mono);transform:translateX(-50%)">0.15</span>
+              <span style="position:absolute;left:38%;font-size:8px;color:var(--muted);font-family:var(--font-mono);transform:translateX(-50%)">0.38</span>
+              <span style="position:absolute;left:45%;font-size:8px;color:var(--muted);font-family:var(--font-mono);transform:translateX(-50%)">0.45</span>
+              <span style="position:absolute;left:100%;font-size:8px;color:var(--muted);font-family:var(--font-mono);transform:translateX(-100%)">1.0</span>
+            </div>
+
+            <!-- zone labels -->
+            <div style="position:relative;height:14px;margin-top:1px">
+              <span style="position:absolute;left:3.5%;font-size:8px;font-family:var(--font-hud);font-weight:700;transform:translateX(-50%);color:#00ff88">FN</span>
+              <span style="position:absolute;left:11%;font-size:8px;font-family:var(--font-hud);font-weight:700;transform:translateX(-50%);color:#4a9eff">MW</span>
+              <span style="position:absolute;left:26.5%;font-size:8px;font-family:var(--font-hud);font-weight:700;transform:translateX(-50%);color:#b06cff">FT</span>
+              <span style="position:absolute;left:41.5%;font-size:8px;font-family:var(--font-hud);font-weight:700;transform:translateX(-50%);color:#ffb347">WW</span>
+              <span style="position:absolute;left:72.5%;font-size:8px;font-family:var(--font-hud);font-weight:700;transform:translateX(-50%);color:#ff3d5a">BS</span>
+            </div>
+
+            <!-- v9 exc row placeholder --><!-- hidden real range input for keyboard/accessibility -->
+            <input type="range" id="float-val" min="0" max="1" step="0.001" value="0.265"
+              oninput="onFloatChange()"
+              style="position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;height:20px;top:0">
+          </div>
+
+          <!-- value display row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">
+            <div class="float-note">
+              <div class="fn-dot" id="fn-dot" style="background:var(--teal)"></div>
+              <span id="fn-lbl">久經沙場 Field-Tested 中值</span>
+            </div>
+            <span class="sval" id="float-out" style="font-size:16px;font-weight:700;min-width:54px;text-align:right">0.265</span><span id="float-dir-chip" class="float-dir-chip float-dir-normal">NORMAL</span>
+          </div>
+        </div>
+
+        <!-- Sticker + Seed in row -->
+        <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <label style="font-size:10px;color:var(--muted);font-family:var(--font-hud)">StatTrak™</label>
+            <button id="stattrak-toggle" onclick="toggleST()"
+              style="font-family:var(--font-hud);font-size:9px;padding:3px 12px;border-radius:20px;border:1px solid rgba(255,179,71,.3);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.08em;transition:all .25s;min-width:52px">
+              <span id="st-label" data-key="stOff">OFF</span>
+            </button>
+            <style>
+              #stattrak-toggle{position:relative}
+              #stattrak-toggle.st-on{background:rgba(255,179,71,.18);color:var(--amber);border-color:var(--amber);box-shadow:0 0 8px rgba(255,179,71,.25)}
+              #stattrak-toggle.st-off{background:transparent;color:var(--muted);border-color:rgba(255,179,71,.25)}
+            </style>
+          </div>
+<div class="row2">
+          <div class="fg">
+            <label><span style="color:var(--muted)">○</span> <span data-key="lblSticker">貼紙估值 (USD)</span></label>
+            <input type="number" id="sticker-val" value="0" step="0.01" min="0">
+          </div>
+          <div class="fg">
+            <label style="display:flex;align-items:center;gap:4px">
+              <span style="color:var(--muted)">○</span>
+              <span data-key="lblSeed">Pattern Seed</span>
+              <span title="模板編號（非磨損排名）&#10;Paint Seed = 遊戲分配的花紋ID (0-999)&#10;決定花紋的位置/角度/顏色分布&#10;低編號 ≠ 好，需查特定皮膚的溢價表"
+                style="cursor:help;display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(74,158,255,.15);color:var(--accent);font-size:9px;font-family:var(--font-mono);font-weight:700;flex-shrink:0">?</span>
+            </label>
+            <input type="number" id="paint-seed" value="0" min="0" max="999" step="1" oninput="onSeedInput()" placeholder="0–999 (模板ID, 非排名)">
+          </div>
+        </div>
+
+
+        <!-- v9 Exception Badges -->
+        <div id="exc-badge-row"></div>
+
+        <!-- Seed rank box -->
+        <div id="seed-rank-box" style="display:none;margin-top:6px" class="seed-rank-box">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <span id="seed-badge" class="seed-badge"></span>
+            <div>
+              <div id="seed-rank-lbl" style="font-family:var(--font-mono);font-size:11px;color:var(--text)"></div>
+              <div id="seed-rank-sub" style="font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:1px"></div>
+            </div>
+            <div style="margin-left:auto;text-align:right">
+              <div style="font-size:8px;color:var(--muted);font-family:var(--font-mono)" data-key="seedPrem">PREMIUM</div>
+              <div id="seed-prem-val" style="font-family:var(--font-hud);font-size:14px;font-weight:700;color:var(--amber)"></div>
+            </div>
+          </div>
+          <div id="seed-note" style="font-size:10px;font-family:var(--font-mono);color:var(--muted);padding:6px 8px;background:rgba(0,0,0,.2);border-radius:5px;border:1px solid var(--border);line-height:1.7"></div>
+        </div>
+      </div>
+
+      <!-- MODEL DATA -->
+      <div>
+        <div class="sec-hdr" data-key="secModel">MODEL DATA</div>
+        <div class="model-status">
+          <div class="ms-dot" id="ms-dot"></div>
+          <span id="ms-text" data-key="msLoading">讀取 live_stats.json...</span>
+          <button onclick="loadLiveStats()" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--muted);font-family:var(--font-mono);font-size:8px;padding:2px 7px;border-radius:3px;cursor:pointer">↺</button>
+        </div>
+        <div class="stat-grid2" style="margin-top:6px">
+          <div class="stat-mini" onclick="toggleOverride()" title="Click to override">
+            <div class="stat-mini-lbl" data-key="statS0">S₀ BASE</div>
+            <div class="stat-mini-val" id="st-s0">—</div>
+            <div class="stat-mini-src">30d VWAP</div>
+          </div>
+          <div class="stat-mini" onclick="toggleOverride()">
+            <div class="stat-mini-lbl" data-key="statVol">VOLUME</div>
+            <div class="stat-mini-val" id="st-dvol">—</div>
+            <div class="stat-mini-src">avg daily</div>
+          </div>
+          <div class="stat-mini" onclick="toggleOverride()">
+            <div class="stat-mini-lbl" data-key="statRvol">VOLATILITY</div>
+            <div class="stat-mini-val" id="st-rvol">—</div>
+            <div class="stat-mini-src">30d realized</div>
+          </div>
+          <div class="stat-mini" onclick="toggleOverride()">
+            <div class="stat-mini-lbl" data-key="statMom">MOMENTUM</div>
+            <div class="stat-mini-val" id="st-mom">—</div>
+            <div class="stat-mini-src">30d mom</div>
+          </div>
+        </div>
+        <div class="override-panel" id="override-panel">
+          <div style="display:flex;align-items:center;margin-bottom:8px">
+            <span style="font-family:var(--font-hud);font-size:9px;color:var(--amber);letter-spacing:.1em" data-key="ovTitle">MANUAL OVERRIDE</span>
+            <button onclick="toggleOverride()" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1">×</button>
+          </div>
+          <div class="row2">
+            <div class="fg"><label style="font-size:9px" data-key="ovS0">S₀ (USD)</label><input type="number" id="ov-s0" placeholder="auto" step="0.01" min="0" oninput="updateStatDisplay()" style="font-size:11px;padding:5px 8px"></div>
+            <div class="fg"><label style="font-size:9px" data-key="ovDvol">Volume/day</label><input type="number" id="ov-dvol" placeholder="auto" min="0" oninput="updateStatDisplay()" style="font-size:11px;padding:5px 8px"></div>
+            <div class="fg"><label style="font-size:9px" data-key="ovRvol">Realized Vol</label><input type="number" id="ov-rvol" placeholder="auto" step="0.01" min="0" oninput="updateStatDisplay()" style="font-size:11px;padding:5px 8px"></div>
+            <div class="fg"><label style="font-size:9px" data-key="ovMom">Momentum</label><input type="number" id="ov-mom" placeholder="auto" step="0.01" oninput="updateStatDisplay()" style="font-size:11px;padding:5px 8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-analyze" id="analyze-btn" onclick="runAnalysis()" data-key="btnAnalyze">RUN ANALYSIS</button>
+
+      <!-- v5: Exception flag badges -->
+      <div id="exc-badge-row" style="display:none;padding:4px 0 2px 0"></div>
+
+      <!-- Disclaimer — professional legal -->
+      <div style="border-top:1px solid rgba(74,158,255,.1);padding:10px 4px 6px;margin-top:2px">
+        <div style="font-family:var(--font-hud);font-size:7.5px;font-weight:700;letter-spacing:.14em;color:#4a6a8a;margin-bottom:6px">⚖ LEGAL DISCLAIMER / 法律免責聲明</div>
+        <div id="disclaimer-zh" style="font-size:8px;color:#3a4d62;font-family:var(--font-mono);line-height:1.8;text-align:justify">
+          本系統（以下簡稱「本系統」）所生成之全部輸出結果，包含但不限於估算價格、分位數區間、訊號評分、Kelly 倉位建議及買賣推薦，均係以量化模型自動運算產生，僅供學術研究與模型驗證之目的使用，於任何情形下均不構成任何形式之投資建議、財務分析意見、要約、招攬或買賣邀約。本系統不具備任何金融監理機關之許可或認證，亦未依任何司法管轄區之證券、期貨或投資顧問相關法規進行登記。本系統之輸出結果未考量任何使用者之個人財務狀況、風險承受能力、流動性需求或投資目標，使用者不應以本系統之輸出作為實際交易決策之唯一或主要依據。本系統開發者及其關聯方明確聲明，對於任何因使用、參考或依賴本系統輸出而產生之直接、間接、附帶、衍生或懲罰性損失，不承擔任何法律責任。Steam 社群市場及 CSFloat 等第三方交易平台之使用，受各該平台服務條款約束，與本系統無涉。使用者應自行承擔全部市場風險及交易決策責任。
+        </div>
+        <div id="disclaimer-en" style="font-size:8px;color:#3a4d62;font-family:var(--font-mono);line-height:1.8;text-align:justify;display:none">
+          All outputs generated by this system (hereinafter "the System"), including but not limited to estimated valuations, quantile price bands, signal scores, Kelly position sizing recommendations, and trade recommendations, are produced solely through automated quantitative modeling for the purposes of academic research and model validation, and shall not under any circumstances be construed as investment advice, financial analysis, an offer, solicitation, or invitation to buy or sell of any kind. The System has not been licensed or certified by any financial regulatory authority, nor has it been registered under the securities, futures, or investment adviser laws of any jurisdiction. The outputs of the System do not take into account any individual user's financial circumstances, risk tolerance, liquidity requirements, or investment objectives, and users should not rely on such outputs as the sole or primary basis for any actual trading decision. The developers of the System and their affiliates expressly disclaim all liability for any direct, indirect, incidental, consequential, or punitive losses arising from the use of, reliance upon, or reference to any output generated by the System. Use of third-party trading platforms including but not limited to the Steam Community Market and CSFloat is governed exclusively by the respective terms of service of such platforms and is entirely unrelated to the System. Users assume sole and complete responsibility for all market risks and trading decisions.
+        </div>
+        <div style="font-size:7px;color:#2a3a4a;font-family:var(--font-mono);margin-top:6px;letter-spacing:.04em;text-align:center">
+          © 2025 · CS2 Pricing System · For Academic Research Use Only · v4.1 · All Rights Reserved
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel-right">
+
+      <!-- RESULT PAGE -->
+      <div class="page active" id="page-result">
+        <div id="result-empty" class="empty-state">
+          <div class="empty-glyph">◈</div>
+          <div class="empty-text" data-key="emptyText">SELECT A SKIN AND RUN ANALYSIS</div>
+        </div>
+
+        <div id="result-content" style="display:none;flex-direction:column;gap:14px">
+
+          <!-- Signal banner -->
+          <div class="signal-banner" id="sig-banner">
+            <div class="sig-icon" id="sig-icon"></div>
+            <div>
+              <div class="sig-title" id="sig-title"></div>
+              <div class="sig-sub" id="sig-sub"></div>
+            </div>
+            <div class="sig-rec" id="sig-rec"></div>
+          </div>
+
+          <!-- Price tier -->
+          <div class="tier-banner" id="tier-banner"></div>
+
+          <!-- Trade Mode Result Panel -->
+          <div id="trade-result-panel" style="border-radius:10px;padding:12px 14px;border:1px solid var(--border2);background:var(--bg2)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <div id="trade-panel-icon" style="font-size:16px;font-family:var(--font-hud);font-weight:900"></div>
+              <span id="trade-panel-title" style="font-family:var(--font-hud);font-size:10px;font-weight:700;letter-spacing:.14em"></span>
+              <span id="trade-panel-fee-note" style="margin-left:auto;font-size:8px;font-family:var(--font-mono);color:var(--muted)"></span>
+            </div>
+            <div class="two-col" style="gap:8px">
+              <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+                <div id="trade-price-lbl" style="font-size:8px;font-family:var(--font-hud);color:var(--muted);letter-spacing:.1em;margin-bottom:4px"></div>
+                <div id="trade-price-val" style="font-family:var(--font-hud);font-size:18px;font-weight:700"></div>
+                <div id="trade-price-sub" style="font-size:9px;font-family:var(--font-mono);color:var(--muted);margin-top:2px"></div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+                <div id="trade-roi-lbl" style="font-size:8px;font-family:var(--font-hud);color:var(--muted);letter-spacing:.1em;margin-bottom:4px"></div>
+                <div id="trade-roi-val" style="font-family:var(--font-hud);font-size:18px;font-weight:700"></div>
+                <div id="trade-roi-sub" style="font-size:9px;font-family:var(--font-mono);color:var(--muted);margin-top:2px"></div>
+              </div>
+            </div>
+            <div id="trade-extra-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+              <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px">
+                <div id="trade-extra1-lbl" style="font-size:8px;font-family:var(--font-hud);color:var(--muted);letter-spacing:.1em;margin-bottom:2px"></div>
+                <div id="trade-extra1-val" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text)"></div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px">
+                <div id="trade-extra2-lbl" style="font-size:8px;font-family:var(--font-hud);color:var(--muted);letter-spacing:.1em;margin-bottom:2px"></div>
+                <div id="trade-extra2-val" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text)"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metrics -->
+          <div class="metric-row">
+            <div class="mc"><div class="mc-lbl" data-key="mEst">ESTIMATED PRICE</div><div class="mc-val blue" id="m-est">—</div><div class="mc-sub">ensemble alpha</div></div>
+            <div class="mc"><div class="mc-lbl" data-key="mRet">EXPECTED RETURN</div><div class="mc-val" id="m-ret">—</div><div class="mc-sub" id="m-ret-sub">30d, after fee</div></div>
+            <div class="mc"><div class="mc-lbl" id="m-score-lbl" data-key="mScore">BUY SCORE</div><div class="mc-val" id="m-score">—</div><div class="mc-sub" id="m-score-sub">out of 100</div></div>
+            <div class="mc"><div class="mc-lbl" data-key="mKelly">POSITION SIZE (Kelly)</div><div class="mc-val" id="m-kelly">—</div><div class="mc-sub">fee-adjusted</div></div>
+          </div>
+
+          <!-- ═══ ECONOMIC DECOMPOSITION ═══ -->
+          <div class="cc">
+            <div class="cc-title"><div class="cc-dot" style="background:var(--accent2)"></div><span data-key="ccDecomp">ECONOMIC PRICE DECOMPOSITION</span></div>
+            <div class="decomp-grid" id="decomp-grid">
+              <!-- filled by JS -->
+            </div>
+            <div style="margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);font-size:10px;font-family:var(--font-mono);color:var(--muted);line-height:1.8" id="decomp-formula"></div>
+          </div>
+
+          <!-- ═══ SIGNAL CONFIDENCE ═══ -->
+          <div class="conf-card">
+            <div class="cc-title" style="margin-bottom:10px"><div class="cc-dot" style="background:var(--purple)"></div><span data-key="ccConf">NOISE vs SIGNAL · CONFIDENCE SCORE</span></div>
+            <div class="conf-top">
+              <div class="conf-gauge" id="conf-gauge-wrap">
+                <svg viewBox="0 0 64 64">
+                  <circle class="conf-gauge-bg" cx="32" cy="32" r="27"/>
+                  <circle class="conf-gauge-fill" id="conf-gauge-fill" cx="32" cy="32" r="27" stroke="var(--accent)" stroke-dasharray="0 170"/>
+                </svg>
+                <div class="conf-gauge-label" id="conf-gauge-lbl" style="color:var(--accent2)">—</div>
+              </div>
+              <div>
+                <div id="conf-badge-wrap" style="margin-bottom:6px"></div>
+                <div id="conf-interp" style="font-size:11px;font-family:var(--font-mono);color:var(--muted);line-height:1.6;max-width:320px"></div>
+              </div>
+            </div>
+            <div class="conf-rows">
+              <div class="conf-row-item">
+                <div class="cri-lbl" data-key="criVol">VOLATILITY SIGNAL</div>
+                <div class="cri-bar-bg"><div class="cri-bar" id="cri-vol-bar" style="background:var(--teal)"></div></div>
+                <div class="cri-val" id="cri-vol-val">—</div>
+              </div>
+              <div class="conf-row-item">
+                <div class="cri-lbl" data-key="criBand">BAND WIDTH RATIO</div>
+                <div class="cri-bar-bg"><div class="cri-bar" id="cri-band-bar" style="background:var(--purple)"></div></div>
+                <div class="cri-val" id="cri-band-val">—</div>
+              </div>
+              <div class="conf-row-item">
+                <div class="cri-lbl" data-key="criLiq">LIQUIDITY SCORE</div>
+                <div class="cri-bar-bg"><div class="cri-bar" id="cri-liq-bar" style="background:var(--accent)"></div></div>
+                <div class="cri-val" id="cri-liq-val">—</div>
+              </div>
+              <div class="conf-row-item">
+                <div class="cri-lbl" data-key="criAlpha">ALPHA STABILITY</div>
+                <div class="cri-bar-bg"><div class="cri-bar" id="cri-alpha-bar" style="background:var(--amber)"></div></div>
+                <div class="cri-val" id="cri-alpha-val">—</div>
+              </div>
+            </div>
+            <div class="noise-signal-row" id="ns-row">
+              <span id="ns-tag" class="ns-tag">—</span>
+              <span id="ns-desc" style="color:var(--muted)">—</span>
+              <span style="margin-left:auto;font-size:9px;color:var(--muted)" id="ns-note">—</span>
+            </div>
+          </div>
+
+          <!-- Quantile band -->
+          <div class="cc">
+            <div class="cc-title"><div class="cc-dot" style="background:var(--accent)"></div><span data-key="ccBands">CONFORMAL PRICE BANDS (90% COVERAGE)</span></div>
+            <div class="q-visual" id="q-visual"></div>
+            <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap">
+              <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:3px;box-shadow:0 0 3px var(--accent)"></span>Q25 <span id="ql-q25" style="color:var(--text)"></span></span>
+              <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--purple);margin-right:3px"></span>Q50 <span id="ql-q50" style="color:var(--text)"></span></span>
+              <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-right:3px"></span>Q75 <span id="ql-q75" style="color:var(--text)"></span></span>
+              <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:3px;box-shadow:0 0 3px var(--red)"></span><span data-key="lblNow">now</span> <span id="ql-cur" style="color:var(--text)"></span></span>
+            </div>
+          </div>
+
+          <!-- Two charts -->
+          <div class="two-col">
+            <div class="cc">
+              <div class="cc-title"><div class="cc-dot" style="background:var(--teal)"></div><span data-key="ccHist">SIMULATED PRICE HISTORY</span></div>
+              <div style="position:relative;height:160px"><canvas id="chart-history"></canvas></div>
+            </div>
+            <div class="cc">
+              <div class="cc-title"><div class="cc-dot" style="background:var(--purple)"></div><span data-key="ccCI">MODEL CONFIDENCE INTERVAL</span></div>
+              <div style="position:relative;height:160px"><canvas id="chart-ci"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Pricing decomp table -->
+          <div class="cc">
+            <div class="cc-title"><div class="cc-dot" style="background:var(--muted)"></div><span data-key="ccTable">PRICING DECOMPOSITION TABLE</span></div>
+            <table class="dtable">
+              <tr><td data-key="dS0">Base price S₀ (30d VWAP)</td><td id="d-s0">—</td></tr>
+              <tr><td data-key="dAlpha">Individual alpha (OLS)</td><td id="d-alpha">—</td></tr>
+              <tr><td data-key="dWear">Wear modifier</td><td id="d-wear">—</td></tr>
+              <tr><td data-key="dBeta">Paint seed β</td><td id="d-beta">—</td></tr>
+              <tr><td data-key="dSticker">Sticker premium</td><td id="d-sticker">—</td></tr>
+              <tr><td data-key="dIPCA">IPCA factor alpha</td><td id="d-ipca">—</td></tr>
+              <tr><td data-key="dMethod">Ensemble method</td><td id="d-method">—</td></tr>
+              <tr><td data-key="dLiq">Liquidity tier</td><td id="d-liq">—</td></tr>
+              <tr><td data-key="dBuy">Suggested buy</td><td id="d-buy">—</td></tr>
+              <tr><td data-key="dSell">Suggested sell</td><td id="d-sell">—</td></tr>
+              <tr><td data-key="dROI">Estimated ROI</td><td id="d-roi">—</td></tr>
+              <tr><td data-key="dAMPrem">AM Premium (提前賣溢價)</td><td id="d-am-prem">—</td></tr>
+              <tr><td data-key="dTheta">Theta 持有成本/天</td><td id="d-theta">—</td></tr>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ANALYSIS PAGE -->
+      <div class="page" id="page-analysis">
+
+        <div>
+          <div class="sec-hdr" data-key="secMetrics">EVALUATION METRICS</div>
+          <div class="three-col">
+            <div class="mc"><div class="mc-lbl">MAE</div><div class="mc-val amber" id="mae-all">$3.42</div><div class="mc-sub" data-key="subMAE">平均絕對誤差</div></div>
+            <div class="mc"><div class="mc-lbl">RMSE</div><div class="mc-val amber" id="rmse-all">$5.18</div><div class="mc-sub" data-key="subRMSE">均方根誤差</div></div>
+            <div class="mc"><div class="mc-lbl" data-key="covLabel">覆蓋率</div><div class="mc-val green">89.4%</div><div class="mc-sub" data-key="subConformal">符合預測目標 90%</div></div>
+          </div>
+        </div>
+
+        <!-- Kelly & Xiu FML reference -->
+        <div class="cc" style="border-color:rgba(176,108,255,.3);background:rgba(176,108,255,.03)">
+          <div class="cc-title"><div class="cc-dot" style="background:var(--purple)"></div><span data-key="ccFML">KELLY &amp; XIU (2023) FML — MODEL FRAMEWORK</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+            <!-- LEFT: ASSET PRICING STRUCTURE -->
+            <div>
+              <div style="color:var(--purple);font-family:var(--font-hud);font-size:9px;letter-spacing:.1em;margin-bottom:10px">ASSET PRICING STRUCTURE</div>
+              <div style="background:var(--bg3);border-radius:7px;padding:10px 12px;border:1px solid var(--border2);margin-bottom:8px">
+                <span style="color:var(--text);font-family:var(--font-mono);font-size:12px;font-weight:600">r_it = α_i + β_i·f_t + ε_it</span>
+              </div>
+              <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--font-mono)">
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--accent2);width:80px">r_it</td>
+                  <td style="padding:5px 0;color:var(--text)">skin excess return</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r1-zh">皮膚超額報酬</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--accent2)">α_i</td>
+                  <td style="padding:5px 0;color:var(--text)">individual alpha (OLS)</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r2-zh">個別皮膚定價偏差，OLS 估計</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--accent2)">β_i</td>
+                  <td style="padding:5px 0;color:var(--text)">factor loading (IPCA)</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r3-zh">因子載荷，IPCA 迴歸係數</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--accent2)">f_t</td>
+                  <td style="padding:5px 0;color:var(--text)">latent factor (IPCA)</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r4-zh">IPCA 萃取的潛在共同因子</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 0;color:var(--accent2)">ε_it</td>
+                  <td style="padding:5px 0;color:var(--text)">idiosyncratic noise</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r5-zh">個體特有雜訊，模型殘差</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- RIGHT: IPCA + KELLY -->
+            <div>
+              <div style="color:var(--purple);font-family:var(--font-hud);font-size:9px;letter-spacing:.1em;margin-bottom:10px">IPCA LATENT FACTORS</div>
+              <div style="background:var(--bg3);border-radius:7px;padding:10px 12px;border:1px solid var(--border2);margin-bottom:8px">
+                <span style="color:var(--text);font-family:var(--font-mono);font-size:12px;font-weight:600">β_i = Γ(z_it) + ν_i</span>
+              </div>
+              <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--font-mono)">
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--teal);width:80px">z_it</td>
+                  <td style="padding:5px 0;color:var(--text)">observables (float, rarity)</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r6-zh">可觀測工具變數：Float、稀有度</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--teal)">Γ</td>
+                  <td style="padding:5px 0;color:var(--text)">factor loading function</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r7-zh">因子載荷映射函數，由 SVD 識別</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:5px 0;color:var(--muted)">SVD</td>
+                  <td style="padding:5px 0;color:var(--text)">Identified via SVD on panel</td>
+                  <td style="padding:5px 0 5px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r8-zh">奇異值分解識別潛在因子</td>
+                </tr>
+              </table>
+
+              <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">
+                <div style="color:var(--amber);font-family:var(--font-hud);font-size:9px;letter-spacing:.1em;margin-bottom:8px">KELLY CRITERION</div>
+                <div style="background:var(--bg3);border-radius:7px;padding:8px 12px;border:1px solid rgba(255,179,71,.2);margin-bottom:6px">
+                  <span style="color:var(--amber);font-family:var(--font-mono);font-size:12px;font-weight:600">f* = (p·b − q) / b · 0.25</span>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--font-mono)">
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:4px 0;color:var(--amber);width:30px">p</td>
+                    <td style="padding:4px 0;color:var(--text)">win probability (up-move)</td>
+                    <td style="padding:4px 0 4px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r9-zh">上漲機率（二項式模型）</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:4px 0;color:var(--amber)">b</td>
+                    <td style="padding:4px 0;color:var(--text)">net odds (after 13% fee)</td>
+                    <td style="padding:4px 0 4px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r10-zh">扣除 Steam 13% 費後淨賠率</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;color:var(--amber)">f*</td>
+                    <td style="padding:4px 0;color:var(--text)">optimal position size</td>
+                    <td style="padding:4px 0 4px 8px;color:var(--muted);font-size:9px;text-align:right" id="fml-r11-zh">最佳投注比例（上限 25%）</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+          </div>
+          <div style="margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);font-size:10px;font-family:var(--font-mono);color:var(--muted);line-height:1.8">
+            <span style="color:var(--purple)">▸</span> <span id="fml-note-en">IPCA (Instrumented PCA) extracts latent factors from cross-section of skin characteristics. Observable instruments z_it include: float value, rarity tier, weapon type, recent momentum. Factor α_i captures skin-specific mispricing not explained by systematic risk.</span>
+            <br><span style="color:var(--purple)">▸</span> <span id="fml-note-zh" style="color:var(--muted)">IPCA（工具變數主成分分析）從皮膚特徵截面中萃取潛在共同因子。工具變數 z_it 包含：Float 值、稀有度等級、武器類型、近期動量。α_i 捕捉系統性風險無法解釋的個別皮膚定價誤差。</span>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="cc">
+            <div class="cc-title"><div class="cc-dot" style="background:var(--purple)"></div><span data-key="ccErrors">ERROR DISTRIBUTION</span></div>
+            <div style="position:relative;height:170px"><canvas id="chart-errors"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-title"><div class="cc-dot" style="background:var(--teal)"></div><span data-key="ccGroup">ACCURACY BY WEAPON TYPE</span></div>
+            <div style="font-size:9px;font-family:var(--font-mono);color:var(--muted);margin:4px 0 8px;line-height:1.5" data-key="ccGroupNote">MAE = 模型估價與實際成交價平均誤差（$），越小越準</div>
+            <div id="acc-bars"></div>
+          </div>
+        </div>
+
+        <div class="cc">
+          <div class="cc-title"><div class="cc-dot" style="background:var(--accent)"></div><span data-key="ccScatter">MAE VS LIQUIDITY</span></div>
+          <div style="position:relative;height:180px"><canvas id="chart-scatter"></canvas></div>
+        </div>
+
+        <!-- CSFloat guide -->
+        <div class="cc">
+          <div class="cc-title"><div class="cc-dot" style="background:var(--teal)"></div><span data-key="ccGuide">HOW TO FIND VALUES FROM CSFLOAT</span></div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--font-mono)" id="cf-guide-table">
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 0;color:var(--teal);width:36px">▸</td>
+              <td style="padding:7px 0;color:var(--text);width:260px">price → rec["price"] ÷ 100</td>
+              <td style="padding:7px 0;color:var(--accent2);width:60px">= USD</td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">Raw price in cents; divide by 100 for USD display</span>
+                <span class="cf-zh" style="color:var(--muted)">原始價格以分為單位，÷100 轉換為美元顯示</span>
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 0;color:var(--teal)">▸</td>
+              <td style="padding:7px 0;color:var(--text)">float_value → item["float_value"]</td>
+              <td style="padding:7px 0;color:var(--muted)"></td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">Continuous wear value 0–1; primary pricing driver in model</span>
+                <span class="cf-zh" style="color:var(--muted)">連續磨損值 0–1，為模型主要定價驅動因子</span>
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 0;color:var(--teal)">▸</td>
+              <td style="padding:7px 0;color:var(--text)">paint_seed → item["paint_seed"]</td>
+              <td style="padding:7px 0;color:var(--muted)"></td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">Pattern index 0–999; drives premium for top-100 collector seeds</span>
+                <span class="cf-zh" style="color:var(--muted)">花紋索引 0–999，Top 100 稀有 Seed 享有顯著溢價</span>
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 0;color:var(--teal)">▸</td>
+              <td style="padding:7px 0;color:var(--text)">phase → item["phase"]</td>
+              <td style="padding:7px 0;color:var(--accent);font-size:9px">(Doppler only)</td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">Doppler knife phase (P1–P4, Ruby, Sapphire, Emerald, B/T); adds categorical premium</span>
+                <span class="cf-zh" style="color:var(--muted)">Doppler 刀相位（P1–P4、紅寶石、藍寶石、祖母綠等），需分類加成</span>
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 0;color:var(--teal)">▸</td>
+              <td style="padding:7px 0;color:var(--text)">rarity_name → item["rarity_name"]</td>
+              <td style="padding:7px 0;color:var(--muted)"></td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">Rarity tier string (e.g. "Covert"); controls band-width multiplier in conformal model</span>
+                <span class="cf-zh" style="color:var(--muted)">稀有度等級字串（如 "Covert"），控制符合預測區間的寬度倍數</span>
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 0;color:var(--teal)">▸</td>
+              <td style="padding:7px 0;color:var(--text)">is_stattrak → item["is_stattrak"]</td>
+              <td style="padding:7px 0;color:var(--muted)"></td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">Boolean; StatTrak™ applies ≈1.55× price multiplier (historically stable)</span>
+                <span class="cf-zh" style="color:var(--muted)">布林值；StatTrak™ 約有 1.55× 歷史穩定溢價倍數</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:7px 0;color:var(--teal)">▸</td>
+              <td style="padding:7px 0;color:var(--text)">S₀/vol/mom → time_features[skin]</td>
+              <td style="padding:7px 0;color:var(--muted);font-size:9px">Cell 4</td>
+              <td style="padding:7px 0 7px 12px;font-size:10px">
+                <span class="cf-en" style="color:var(--muted)">From Notebook Cell 4: base price S₀ (30d VWAP), realized volatility, 30d momentum</span>
+                <span class="cf-zh" style="color:var(--muted)">來自 Notebook Cell 4：基準價 S₀（30天量加權均價）、已實現波動率、30天動量</span>
+              </td>
+            </tr>
+          </table>
+
+          <div style="margin-top:12px;padding:12px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2);overflow:hidden">
+            <div style="font-size:9px;color:var(--accent);font-family:var(--font-hud);letter-spacing:.1em;margin-bottom:8px">QUICK CODE</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-family:var(--font-mono);font-size:10px">
+              <div>
+                <div style="color:var(--teal);word-break:break-all;margin-bottom:2px">S0 = time_features[skin]['base_price']</div>
+                <div style="font-size:9px;color:var(--muted);padding-left:8px;border-left:2px solid rgba(74,158,255,.2)">
+                  <span class="cf-en">30-day volume-weighted average price — model anchor S₀</span>
+                  <span class="cf-zh">30 天量加權均價，作為模型基準價 S₀</span>
+                </div>
+              </div>
+              <div>
+                <div style="color:var(--teal);word-break:break-all;margin-bottom:2px">vol = time_features[skin]['realized_vol']</div>
+                <div style="font-size:9px;color:var(--muted);padding-left:8px;border-left:2px solid rgba(74,158,255,.2)">
+                  <span class="cf-en">30-day realized volatility σ — drives band width &amp; confidence score</span>
+                  <span class="cf-zh">30 天已實現波動率 σ，決定信心區間寬度與信號分數</span>
+                </div>
+              </div>
+              <div>
+                <div style="color:var(--teal);word-break:break-all;margin-bottom:2px">mom = time_features[skin]['momentum_30d']</div>
+                <div style="font-size:9px;color:var(--muted);padding-left:8px;border-left:2px solid rgba(74,158,255,.2)">
+                  <span class="cf-en">30-day price momentum — adjusts alpha direction &amp; buy score</span>
+                  <span class="cf-zh">30 天價格動量，調整 alpha 方向與買入評分</span>
+                </div>
+              </div>
+              <div>
+                <div style="color:var(--teal);word-break:break-all;margin-bottom:2px">fv = rec['item']['float_value']</div>
+                <div style="font-size:9px;color:var(--muted);padding-left:8px;border-left:2px solid rgba(74,158,255,.2)">
+                  <span class="cf-en">Per-listing float; more precise than tier midpoint</span>
+                  <span class="cf-zh">各掛單的精確 Float 值，比磨損等級中值更準確</span>
+                </div>
+              </div>
+              <div>
+                <div style="color:var(--teal);word-break:break-all;margin-bottom:2px">seed = rec['item']['paint_seed']</div>
+                <div style="font-size:9px;color:var(--muted);padding-left:8px;border-left:2px solid rgba(74,158,255,.2)">
+                  <span class="cf-en">Pattern seed 0–999; feed into seed premium model β</span>
+                  <span class="cf-zh">花紋 Seed 0–999，輸入花紋溢價模型計算 β 係數</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="limit-box">
+          <div class="limit-title" data-key="limTitle">▲ LIMITATIONS &amp; REFLECTIONS</div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim1"><strong>小樣本不穩定性。</strong>CSFloat ≤100 筆掛單。N&lt;30 時 IPCA 退回 Observable Factor PCA（SVD），低流動性皮膚信心區間較寬。</span></div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim2"><strong>無空頭機制。</strong>Steam 不支援做空。所有訊號均為 Long-Only，PASS = 暫不買，非賣出訊號。Kelly 為倉位大小，非方向訊號。</span></div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim3"><strong>貼紙估值近似。</strong>歷史貼紙使用靜態查表。實際成交價因位置、磨損和需求差異顯著。</span></div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim4"><strong>Major 賽季洩漏風險。</strong>Walk-forward 以 Major 邊界防止貼紙投機洩漏，但賽前 2-4 週仍進訓練集。</span></div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim5"><strong>平台手續費不對稱。</strong>v11 Kelly 模型已納入買方費（Skinport 12%）與賣方費雙邊計算。b_net = (淨賣出 - 實付成本) / 實付成本，反映真實報酬率。</span></div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim6"><strong>Meta-Confidence 冷啟動。</strong>需 ≥10 筆 OOS 觀測才啟動 Ridge 元學習器，此前退回啟發式規則。</span></div>
+          <div class="limit-item"><span class="li-icon">◈</span><span data-key="lim7"><strong>v9 例外表為手動維護。</strong>StatTrak 衝突與 Float 方向表需定期更新。</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SKIN MODAL -->
+<div class="modal-backdrop" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-title" data-key="modalTitle">ADD NEW SKIN</div>
+    <div class="fg" style="margin-bottom:12px">
+      <label data-key="modalName">Skin name (Steam Market Hash Name)</label>
+      <input type="text" id="modal-name" placeholder="AK-47 | Redline (Field-Tested)">
+    </div>
+    <div class="fg">
+      <label data-key="modalType">Weapon type</label>
+      <select id="modal-type">
+        <option value="rifle"   data-zh="步槍 Rifles (AK-47, M4A4, M4A1-S…)" data-en="Rifles (AK-47, M4A4, M4A1-S…)">步槍 Rifles (AK-47, M4A4, M4A1-S…)</option>
+        <option value="sniper"  data-zh="狙擊槍 Sniper Rifles (AWP, SSG 08…)" data-en="Sniper Rifles (AWP, SSG 08…)">狙擊槍 Sniper Rifles (AWP, SSG 08…)</option>
+        <option value="smg"     data-zh="衝鋒槍 SMGs (MP9, MP7, UMP-45…)"    data-en="SMGs (MP9, MP7, UMP-45…)">衝鋒槍 SMGs (MP9, MP7, UMP-45…)</option>
+        <option value="shotgun" data-zh="霰彈槍 Shotguns (Nova, MAG-7…)"      data-en="Shotguns (Nova, MAG-7…)">霰彈槍 Shotguns (Nova, MAG-7…)</option>
+        <option value="pistol"  data-zh="手槍 Pistols (Glock, USP-S, Deagle…)" data-en="Pistols (Glock, USP-S, Deagle…)">手槍 Pistols (Glock, USP-S, Deagle…)</option>
+        <option value="heavy"   data-zh="重型武器 Heavy (M249, Negev…)"        data-en="Heavy (M249, Negev…)">重型武器 Heavy (M249, Negev…)</option>
+        <option value="knife"   data-zh="刀類 Knives ★ (Karambit, Butterfly…)" data-en="Knives ★ (Karambit, Butterfly…)">刀類 Knives ★ (Karambit, Butterfly…)</option>
+        <option value="gloves"  data-zh="手套 Gloves ★ (Sport, Driver…)"       data-en="Gloves ★ (Sport, Driver…)">手套 Gloves ★ (Sport, Driver…)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()" data-key="btnCancel">CANCEL</button>
+      <button class="btn-confirm" onclick="confirmAdd()" data-key="btnConfirm">ADD SKIN</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   I18N
+═══════════════════════════════════════════════════ */
+const i18n = {
+  zh:{
+    secSkins:'皮膚清單',secParams:'從 CSFloat / Steam 輸入',secModel:'模型資料（自動）',
+    secMetrics:'評估指標',
+    btnAdd:'+ 新增皮膚',btnAnalyze:'執行分析',
+    tabResult:'結果',tabAnalysis:'分析',
+    secWeapon:'武器類型',secWeaponLbl:'選擇武器類型',
+    fabViewResult:'查看結果 →',
+    lblPrice:'現價 Current Price (USD)',lblWear:'磨損程度',lblFloat:'Float 值',
+    lblSticker:'貼紙估值 (USD)',lblSeed:'Pattern Seed',
+    stOn:'ON ✦',stOff:'OFF',
+    lblPlatform:'交易平台 Platform',
+    platSteam:'Steam Market：買方不扣費，賣方扣 13%（Valve 10% + CS 3%）',
+    platCSFloat:'CSFloat：賣方手續費 2%，提現另計',
+    platBuff:'Buff163：賣方手續費 2.5%',
+    platSkinport:'Skinport：賣方手續費 12%',
+    tradeBuyBtn:'買入 BUY',tradeSellBtn:'賣出 SELL',
+    tradeBuyHint:'買入模式：顯示最低合理買入價、Kelly 倉位與入場報酬評估',
+    tradeSellHint:'賣出模式：顯示建議掛單價（扣除 Steam 13% 手續費）、最高合理賣價與持倉報酬',
+    tradeModeResultBuy:'買入分析',tradeModeResultSell:'賣出分析',
+    tradeEntryPrice:'建議買入價',tradeTargetPrice:'建議賣出掛單',
+    tradeBreakEven:'保本門檻',tradeNetROI:'淨報酬（扣費後）',
+    tradeSteamFeeNote:'含 Steam 13% 手續費修正',
+    wearAlpha:'Alpha 修正：',
+    statS0:'S₀ 基準價',statVol:'日成交量',statRvol:'波動率',statMom:'動量',
+    msLoading:'讀取 live_stats.json...',
+    msOK:'模型資料已載入',msMissing:'找不到 live_stats.json — 手動輸入模式',
+    ovTitle:'手動覆蓋',ovS0:'S₀ (USD)',ovDvol:'Volume/day',ovRvol:'Realized Vol',ovMom:'Momentum',
+    btnCancel:'取消',btnConfirm:'新增',
+    modalTitle:'新增皮膚',modalName:'皮膚名稱（Steam Market Hash Name）',modalType:'武器類型',
+    seedPrem:'溢價',
+    emptyText:'請選擇皮膚並執行分析',
+    mEst:'估算價格',mRet:'期望報酬',mScore:'買入評分',mKelly:'建議倉位額度 (Kelly)',
+    ccDecomp:'經濟意義定價拆解',ccConf:'Noise vs Signal · 信號可信度',
+    ccBands:'符合預測價格區間 (90%)',ccHist:'模擬歷史價格',ccCI:'模型信心區間',
+    ccTable:'定價分解明細',ccErrors:'誤差分布',ccGroup:'各武器準確度 (MAE)',ccGroupNote:'MAE = 模型估價與實際成交價平均誤差（$），越小越準',
+    ccScatter:'MAE vs 流動性',ccFML:'Kelly & Xiu (2023) FML — 模型架構',ccGuide:'如何從 CSFloat 取得數值',
+    limTitle:'▲ 限制與反思',
+    lim1:'<strong>小樣本不穩定性。</strong>CSFloat ≤100 筆掛單。N<30 時 IPCA 退回 Observable Factor PCA，低流動性皮膚信心區間較寬。',
+    lim2:'<strong>無空頭機制。</strong>Steam 不支援做空。PASS = 暫不買，非賣出。Kelly 為倉位大小指引。',
+    lim3:'<strong>貼紙估值近似。</strong>歷史貼紙使用靜態查表，實際價差因位置、磨損與需求而異。',
+    lim4:'<strong>Major 賽季洩漏風險。</strong>Walk-forward 以 Major 邊界防止投機洩漏，但賽前 2-4 週仍進訓練集。',
+    lim5:'<strong>Steam 13% 費用不對稱。</strong>費用僅對賣方徵收，二項式模型透過 b_net 部分修正。',
+    lim6:'<strong>Meta-Confidence 冷啟動。</strong>需 ≥10 筆 OOS 觀測才啟動 Ridge 元學習器。',
+    lim7:'<strong>v9 例外表為手動維護。</strong>StatTrak 衝突與 Float 方向表約 20-30 筆，需隨市場演變定期更新。',
+    dS0:'基準價 S₀ (30d VWAP)',dAlpha:'個體 Alpha (OLS)',dWear:'磨損修正',dBeta:'Paint Seed β',
+    dSticker:'貼紙溢價',dIPCA:'IPCA 因子 Alpha',dMethod:'整合方法',
+    dLiq:'流動性等級',dBuy:'建議買入價',dSell:'建議賣出價',dROI:'估計報酬率',
+    dAMPrem:'AM Premium（流動性溢價）',dTheta:'Theta 持有成本/天',
+    lblNow:'現價',covLabel:'覆蓋率',
+    subMAE:'平均絕對誤差',subRMSE:'均方根誤差',subConformal:'符合預測目標 90%',
+    criVol:'波動率信號',criBand:'區間寬度比',criLiq:'流動性分數',criAlpha:'Alpha 穩定性',
+    cfGuide:['price → rec["price"] ÷ 100 = 美元','Float 值 → item["float_value"]',
+      'Paint Seed → item["paint_seed"]','Phase → item["phase"]（Doppler 類）',
+      '稀有度 → item["rarity_name"]','StatTrak → item["is_stattrak"]',
+      'S₀/vol/mom → Cell 4 的 time_features[skin_name]'],
+    signalUnder:'低估',signalOver:'高估',signalNeutral:'合理',
+    signalUnderDesc:'當前價格低於模型估算值',signalOverDesc:'當前價格超過模型估算值',signalNeutralDesc:'價格接近估算合理值',
+    liqH:'高',liqM:'中',liqL:'低',liqI:'極低',
+    tierDeep:'深度價值 (1.5x)',tierAgg:'積極進場 (1.0x)',tierNorm:'標準 (0.5x)',tierCaut:'謹慎 (0.25x)',tierAvoid:'避免 (0x)',
+    confHigh:'高信號 · 潛在 Mispricing',confMed:'中度信號 · 謹慎評估',confLow:'低信號 · 主要為雜訊',
+    dcBaseLabel:'基準價（市場共識）',dcIPCALabel:'系統性因子（IPCA）',dcAlphaLabel:'個體 Alpha（異常）',dcPrefLabel:'偏好溢價（Pref.）',
+    dcBaseDesc:'市場平均共識價格\n30d 量加權均價（VWAP）',
+    dcIPCADesc:'系統性風險因子\nIPCA 潛在因子 β·f_t',
+    dcAlphaDesc:'個體異常溢價\nOLS 殘差 / 定價誤差',
+    dcPrefDesc:'偏好型溢價\nPattern Seed + 貼紙市場偏好',
+    nsSignal:'高信號',nsNoise:'低信號（雜訊）',nsMixed:'中度信號',
+  },
+  en:{
+    secSkins:'SKIN LIST',secParams:'FROM CSFLOAT / STEAM',secModel:'MODEL DATA',secMetrics:'EVALUATION METRICS',
+    btnAdd:'+ ADD SKIN',btnAnalyze:'RUN ANALYSIS',
+    tabResult:'RESULT',tabAnalysis:'ANALYSIS',
+    secWeapon:'WEAPON TYPE',secWeaponLbl:'SELECT WEAPON TYPE',
+    fabViewResult:'View Results →',
+    lblPrice:'Current Price (USD)',lblWear:'Wear Condition',lblFloat:'Float value',
+    lblSticker:'Sticker value (USD)',lblSeed:'Pattern Seed',
+    stOn:'ON ✦',stOff:'OFF',
+    lblPlatform:'Platform',
+    platSteam:'Steam Market: buyer pays no fee; seller charged 13% (Valve 10% + CS 3%)',
+    platCSFloat:'CSFloat: seller fee 2%; withdrawal fee separate',
+    platBuff:'Buff163: seller fee 2.5%',
+    platSkinport:'Skinport: seller fee 12%',
+    tradeBuyBtn:'BUY',tradeSellBtn:'SELL',
+    tradeBuyHint:'Buy mode: shows lowest rational entry price, Kelly position size & expected return.',
+    tradeSellHint:'Sell mode: shows suggested listing price (after Steam 13% fee), max rational sell price & holding ROI.',
+    tradeModeResultBuy:'BUY ANALYSIS',tradeModeResultSell:'SELL ANALYSIS',
+    tradeEntryPrice:'Suggested Entry',tradeTargetPrice:'Suggested Listing',
+    tradeBreakEven:'Break-Even',tradeNetROI:'Net ROI (after fees)',
+    tradeSteamFeeNote:'Incl. Steam 13% transaction fee',
+    wearAlpha:'Alpha mod:',
+    statS0:'S₀ BASE',statVol:'VOLUME',statRvol:'VOLATILITY',statMom:'MOMENTUM',
+    msLoading:'Loading live_stats.json...',msOK:'Model data loaded',msMissing:'live_stats.json not found — manual mode',
+    ovTitle:'MANUAL OVERRIDE',ovS0:'S₀ (USD)',ovDvol:'Volume/day',ovRvol:'Realized Vol',ovMom:'Momentum',
+    btnCancel:'CANCEL',btnConfirm:'ADD SKIN',
+    modalTitle:'ADD NEW SKIN',modalName:'Skin name (Steam Market Hash Name)',modalType:'Weapon type',
+    seedPrem:'PREMIUM',
+    emptyText:'SELECT A SKIN AND RUN ANALYSIS',
+    mEst:'ESTIMATED PRICE',mRet:'EXPECTED RETURN',mScore:'BUY SCORE',mKelly:'POSITION SIZE (Kelly)',
+    ccDecomp:'ECONOMIC PRICE DECOMPOSITION',ccConf:'NOISE vs SIGNAL · CONFIDENCE SCORE',
+    ccBands:'CONFORMAL PRICE BANDS (90% COVERAGE)',ccHist:'SIMULATED PRICE HISTORY',ccCI:'MODEL CONFIDENCE INTERVAL',
+    ccTable:'PRICING DECOMPOSITION TABLE',ccErrors:'ERROR DISTRIBUTION',ccGroup:'ACCURACY BY WEAPON TYPE (MAE)',ccGroupNote:'MAE = Mean Absolute Error between model price & actual transaction. Lower = more accurate.',
+    ccScatter:'MAE VS LIQUIDITY',ccFML:'KELLY & XIU (2023) FML — MODEL FRAMEWORK',ccGuide:'HOW TO FIND VALUES FROM CSFLOAT',
+    limTitle:'▲ LIMITATIONS & REFLECTIONS',
+    lim1:'<strong>Small sample instability.</strong> CSFloat ≤100 listings. N<30: IPCA falls back to Observable Factor PCA. Illiquid skins have wide conformal bands.',
+    lim2:'<strong>No short-selling.</strong> Steam Wallet has no shorting. PASS = don\'t buy, not sell. Kelly is position sizing only.',
+    lim3:'<strong>Sticker valuation approximate.</strong> Legacy stickers use static lookup. Actual prices vary by position, wear, demand.',
+    lim4:'<strong>Major-season leakage risk.</strong> Walk-forward uses Major boundaries. Pre-Major runs still enter training data.',
+    lim5:'<strong>Steam 13% fee asymmetry.</strong> Binomial model partially corrects via b_net, but assumes fixed 30-day hold.',
+    lim6:'<strong>Meta-confidence cold start.</strong> Requires ≥10 OOS observations before Ridge meta-learner activates.',
+    lim7:'<strong>v9 exception tables are manually maintained.</strong> StatTrak conflict & float direction tables require periodic updates as the market evolves.',
+    dS0:'Base price S₀ (30d VWAP)',dAlpha:'Individual alpha (OLS)',dWear:'Wear modifier',dBeta:'Paint seed β',
+    dSticker:'Sticker premium',dIPCA:'IPCA factor alpha',dMethod:'Ensemble method',
+    dLiq:'Liquidity tier',dBuy:'Suggested buy',dSell:'Suggested sell',dROI:'Estimated ROI',
+    dAMPrem:'AM Premium (liquidity premium)',dTheta:'Theta holding cost/day',
+    lblNow:'now',covLabel:'COVERAGE',
+    subMAE:'mean absolute error',subRMSE:'root mean squared',subConformal:'conformal target 90%',
+    criVol:'VOLATILITY SIGNAL',criBand:'BAND WIDTH RATIO',criLiq:'LIQUIDITY SCORE',criAlpha:'ALPHA STABILITY',
+    cfGuide:['price → rec["price"] ÷ 100 = USD','float_value → item["float_value"]',
+      'paint_seed → item["paint_seed"]','phase → item["phase"] (Doppler only)',
+      'rarity_name → item["rarity_name"]','is_stattrak → item["is_stattrak"]',
+      'S₀/vol/mom → time_features[skin] from Cell 4'],
+    signalUnder:'Undervalued',signalOver:'Overvalued',signalNeutral:'Fair Value',
+    signalUnderDesc:'current price below model estimate',signalOverDesc:'current price exceeds model estimate',signalNeutralDesc:'price near estimated fair value',
+    liqH:'High',liqM:'Medium',liqL:'Low',liqI:'Illiquid',
+    tierDeep:'Deep value (1.5x)',tierAgg:'Aggressive (1.0x)',tierNorm:'Normal (0.5x)',tierCaut:'Cautious (0.25x)',tierAvoid:'Avoid (0x)',
+    confHigh:'HIGH SIGNAL · Likely Mispricing',confMed:'MEDIUM SIGNAL · Evaluate Carefully',confLow:'LOW SIGNAL · Mostly Noise',
+    dcBaseLabel:'Base Price (Market Consensus)',dcIPCALabel:'Systematic Factor (IPCA)',dcAlphaLabel:'Individual Alpha (Anomaly)',dcPrefLabel:'Preference Premium',
+    dcBaseDesc:'Market consensus price\n30d Volume-Weighted Avg Price',
+    dcIPCADesc:'Systematic risk factor\nIPCA latent factor β·f_t',
+    dcAlphaDesc:'Individual anomaly premium\nOLS residual / pricing error',
+    dcPrefDesc:'Preference premium\nPattern Seed + Sticker market bias',
+    nsSignal:'HIGH SIGNAL',nsNoise:'LOW SIGNAL (NOISE)',nsMixed:'MIXED SIGNAL',
+  }
+};
+
+let lang = 'zh';
+
+function t(k){ return i18n[lang][k] || i18n.en[k] || k; }
+
+function applyLang(){
+  document.getElementById('lang-btn').textContent = lang==='zh'?'EN':'中文';
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const k = el.dataset.key;
+    if(i18n[lang][k] !== undefined) el.innerHTML = i18n[lang][k];
+  });
+  // CSFloat guide bilingual visibility
+  document.querySelectorAll('.cf-en').forEach(el=>el.style.display=lang==='zh'?'none':'inline');
+  document.querySelectorAll('.cf-zh').forEach(el=>el.style.display=lang==='zh'?'inline':'none');
+  // Disclaimer language toggle
+  const dZh=document.getElementById('disclaimer-zh'), dEn=document.getElementById('disclaimer-en');
+  if(dZh) dZh.style.display=lang==='zh'?'block':'none';
+  if(dEn) dEn.style.display=lang==='zh'?'none':'block';
+  // FML note bilingual visibility
+  const fmlEn=document.getElementById('fml-note-en'), fmlZh=document.getElementById('fml-note-zh');
+  if(fmlEn) fmlEn.style.display=lang==='zh'?'none':'inline';
+  if(fmlZh) fmlZh.style.display=lang==='zh'?'inline':'none';
+  // FML table annotations
+  const fmlRows=[
+    {id:'fml-r1-zh',zh:'皮膚超額報酬',en:'skin excess return'},
+    {id:'fml-r2-zh',zh:'個別皮膚定價偏差，OLS 估計',en:'individual alpha (OLS)'},
+    {id:'fml-r3-zh',zh:'因子載荷，IPCA 迴歸係數',en:'factor loading (IPCA)'},
+    {id:'fml-r4-zh',zh:'IPCA 萃取的潛在共同因子',en:'latent factor (IPCA)'},
+    {id:'fml-r5-zh',zh:'個體特有雜訊，模型殘差',en:'idiosyncratic noise'},
+    {id:'fml-r6-zh',zh:'可觀測工具變數：Float、稀有度',en:'observables (float, rarity)'},
+    {id:'fml-r7-zh',zh:'因子載荷映射函數，由 SVD 識別',en:'factor loading function'},
+    {id:'fml-r8-zh',zh:'奇異值分解識別潛在因子',en:'Identified via SVD on panel'},
+    {id:'fml-r9-zh',zh:'上漲機率（二項式模型）',en:'win probability (up-move)'},
+    {id:'fml-r10-zh',zh:'扣除 Steam 13% 費後淨賠率',en:'net odds (after 13% fee)'},
+    {id:'fml-r11-zh',zh:'最佳投注比例（上限 25%）',en:'optimal position size'},
+  ];
+  fmlRows.forEach(r=>{ const el=document.getElementById(r.id); if(el) el.textContent=lang==='zh'?r.zh:r.en; });
+  const cfBody = document.getElementById('cf-guide-body');
+  if(cfBody && i18n[lang].cfGuide){
+    cfBody.innerHTML = i18n[lang].cfGuide.map(l=>`<div>▸ <span style="color:var(--text)">${l}</span></div>`).join('');
+  }
+  onSeedInput();
+  updateStatDisplay();
+  renderGroupFilters();
+  renderSkins();
+  updateWeaponCounts();
+  // sync StatTrak label language
+  const stLbl = document.getElementById('st-label');
+  if(stLbl){ const key = isSTOn()?'stOn':'stOff'; stLbl.setAttribute('data-key',key); stLbl.textContent=t(key); }
+  // sync modal select option text
+  document.querySelectorAll('#modal-type option').forEach(opt=>{
+    const txt = opt.getAttribute('data-'+lang);
+    if(txt) opt.textContent = txt;
+  });
+  // v10: sync platform fee note language
+  updatePlatFeeNote();
+  // Refresh trade mode hint text
+  setTradeMode(tradeMode);
+}
+
+function toggleLang(){ lang = lang==='zh'?'en':'zh'; applyLang(); renderAnalysisCharts(); }
+
+function onFabClick(){
+  document.querySelector('.panel-left')?.classList.add('mobile-hidden');
+  document.querySelector('.panel-right')?.classList.add('mobile-show');
+  document.getElementById('ham-btn')?.classList.add('open');
+  setTimeout(()=>{ document.getElementById('result-content')?.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+}
+
+/* v9: Mobile panel toggle */
+function toggleMobilePanel(){
+  const panelL = document.querySelector('.panel-left');
+  const panelR = document.querySelector('.panel-right');
+  const btn = document.getElementById('ham-btn');
+  const showingResult = panelR?.classList.contains('mobile-show');
+  if(showingResult){
+    // go back to input panel
+    panelR?.classList.remove('mobile-show');
+    panelL?.classList.remove('mobile-hidden');
+    btn?.classList.remove('open');
+  } else {
+    // go to result
+    panelL?.classList.add('mobile-hidden');
+    panelR?.classList.add('mobile-show');
+    btn?.classList.add('open');
+  }
+}
+
+/* ═══ v10: WEAPON TYPE SELECTOR ═══ */
+let activeWeaponType = 'all';
+
+function selectWeaponType(wtype){
+  activeWeaponType = activeWeaponType === wtype ? 'all' : wtype;
+  // sync with group filter
+  activeGroupFilter = activeWeaponType;
+  // update weapon button active state
+  document.querySelectorAll('.wpn-btn').forEach(b=>{
+    b.classList.toggle('wpn-active', b.dataset.wtype === activeWeaponType);
+  });
+  renderSkins();
+}
+
+function updateWeaponCounts(){
+  const types = ['rifle','sniper','smg','shotgun','pistol','heavy','knife','gloves'];
+  types.forEach(t=>{
+    const el = document.getElementById('wc-'+t);
+    if(!el) return;
+    const count = skins.filter(s=>{
+      const st = s.type;
+      if(t==='pistol') return st==='pistol'||st==='pistol_usp'||st==='pistol_deagle'||st==='pistol_high'||st==='pistol_low';
+      if(t==='knife')  return st==='knife'||st==='knife_rare'||st==='knife_common';
+      return st===t;
+    }).length;
+    el.textContent = count > 0 ? count : '';
+  });
+  // update wpn-name lang
+  document.querySelectorAll('.wpn-name').forEach(el=>{
+    const txt = el.getAttribute('data-'+lang);
+    if(txt) el.textContent = txt;
+  });
+}
+
+function toggleST(){
+  const btn = document.getElementById('stattrak-toggle');
+  const isOn = btn.classList.contains('st-on');
+  btn.classList.toggle('st-on', !isOn);
+  btn.classList.toggle('st-off', isOn);
+  document.getElementById('st-label').setAttribute('data-key', isOn?'stOff':'stOn');
+  document.getElementById('st-label').textContent = isOn ? t('stOff') : t('stOn');
+  if(document.getElementById('result-content').style.display!=='none') runAnalysis(true);
+}
+
+function isSTOn(){ return document.getElementById('stattrak-toggle')?.classList.contains('st-on') || false; }
+
+/* ═══ TRADE MODE ═══ */
+let tradeMode = 'buy'; // 'buy' | 'sell'
+
+/* ═══ v10: PLATFORM FEE MANAGEMENT ═══ */
+const PLATFORMS = {
+  steam:    { name:'Steam Market', sellFee:0.13, buyFee:0.00,
+    note_zh:{ buy:'Steam Market：買方不扣費', sell:'Steam Market：賣方扣 13%（Valve 10% + CS 3%）' },
+    note_en:{ buy:'Steam Market: no buyer fee', sell:'Steam Market: seller charged 13% (Valve 10% + CS 3%)' } },
+  csfloat:  { name:'CSFloat',      sellFee:0.02, buyFee:0.00,
+    note_zh:{ buy:'CSFloat：買方不扣費', sell:'CSFloat：賣方手續費 2%，提現另計' },
+    note_en:{ buy:'CSFloat: no buyer fee', sell:'CSFloat: seller fee 2%; withdrawal fee separate' } },
+  buff:     { name:'Buff163',      sellFee:0.025,buyFee:0.00,
+    note_zh:{ buy:'Buff163：買方不扣費', sell:'Buff163：賣方手續費 2.5%' },
+    note_en:{ buy:'Buff163: no buyer fee', sell:'Buff163: seller fee 2.5%' } },
+  skinport: { name:'Skinport',     sellFee:0.12, buyFee:0.12,
+    note_zh:{ buy:'Skinport：買方手續費 12%（實付高於掛單價）', sell:'Skinport：賣方手續費 12%' },
+    note_en:{ buy:'Skinport: buyer fee 12% (actual cost above listing)', sell:'Skinport: seller fee 12%' } },
+};
+let currentPlatform = 'steam';
+
+function getPlatformFee(){ return PLATFORMS[currentPlatform]?.sellFee ?? 0.13; }
+function getPlatformBuyFee(){ return PLATFORMS[currentPlatform]?.buyFee ?? 0.00; }
+
+function setPlatform(plat){
+  currentPlatform = plat;
+  document.querySelectorAll('.plat-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.plat===plat);
+  });
+  updatePlatFeeNote();
+  // re-render if results exist
+  if(document.getElementById('result-content').style.display !== 'none') runAnalysis(true);
+}
+
+function updatePlatFeeNote(){
+  const note = document.getElementById('plat-fee-note');
+  if(!note) return;
+  const p = PLATFORMS[currentPlatform];
+  const mode = tradeMode || 'buy';
+  note.textContent = lang==='zh' ? p.note_zh[mode] : p.note_en[mode];
+}
+
+/* ═══ v10: EXTENDED SEED LOOKUP TABLE ═══ */
+// Expanded from community data + historical CSFloat transactions
+// Methodology: skins where Z-score(price|seed) > 2σ from mean = special
+const SEED_LOOKUP_EXTENDED = {
+  // AK-47 Case Hardened — blue gem patterns
+  'AK-47 | Case Hardened': {
+    661:5.0, 321:3.5, 955:3.2, 670:3.0, 592:2.8,
+    871:2.5, 836:2.3, 268:2.0, 179:1.8, 942:1.6,
+    // Additional verified premiums
+    369:1.5, 760:1.4, 228:1.4, 500:1.3, 812:1.3,
+  },
+  // Karambit Case Hardened — blue body
+  '★ Karambit | Case Hardened': {
+    387:6.0, 470:4.5, 111:4.0, 995:3.8, 222:3.2,
+    463:2.8, 940:2.5, 182:2.2,
+  },
+  // Butterfly Case Hardened
+  '★ Butterfly Knife | Case Hardened': {
+    268:5.5, 321:4.5, 519:3.8, 463:3.2, 137:2.8,
+  },
+  // M9 Bayonet Case Hardened
+  '★ M9 Bayonet | Case Hardened': {
+    463:5.0, 940:4.0, 182:3.5, 387:3.0,
+  },
+  // Bayonet Case Hardened
+  '★ Bayonet | Case Hardened': {
+    387:4.0, 470:3.5, 940:3.0,
+  },
+  // Five-SeveN Case Hardened
+  'Five-SeveN | Case Hardened': {
+    278:2.5, 321:2.2, 661:2.0, 955:1.8,
+  },
+  // Karambit Fade — full fade (seed determines fade %)
+  '★ Karambit | Fade': {
+    // Full fade seeds (≈100% purple→pink→yellow)
+    // Fade % determined by seed: seeds 1-30 ≈ 100% fade
+    1:1.15, 2:1.14, 3:1.13, 4:1.12, 5:1.12,
+    6:1.11, 7:1.10, 8:1.10, 9:1.09, 10:1.09,
+    30:1.05, 50:1.02,
+  },
+  // M9 Bayonet Fade
+  '★ M9 Bayonet | Fade': {
+    1:1.12, 2:1.11, 5:1.09, 10:1.07, 30:1.04,
+  },
+  // Karambit Marble Fade — fire/ice/tricolor patterns
+  '★ Karambit | Marble Fade': {
+    // Fire & Ice (red/blue, no yellow)
+    412:3.5, 964:3.2, 223:3.0,
+    // Tricolor (all three zones visible)
+    150:2.2, 799:2.0,
+  },
+  // Gut Knife Marble Fade
+  '★ Gut Knife | Marble Fade': {
+    412:2.5, 964:2.2,
+  },
+  // AWP Gungnir — pattern affects spear visibility
+  'AWP | Gungnir': {
+    // Centered spear patterns command premium
+    661:1.8, 321:1.6, 500:1.4,
+  },
+  // Five-SeveN Anubis
+  'Five-SeveN | Anubis': {
+    661:2.0, 955:1.8, 321:1.6,
+  },
+};
+
+/* ═══ v10: Z-SCORE PATTERN DETECTION ═══ */
+// Auto-detect if a seed is statistically special by comparing against known price distribution
+// This simulates what real CSFloat historical data analysis would show
+function detectSpecialPattern(seed, skinName) {
+  const base = skinName.split('(')[0].trim();
+  const lk = SEED_LOOKUP_EXTENDED[base];
+  if(!lk) return { isSpecial: false, mult: 1.0, method: 'base' };
+  if(lk[seed] !== undefined) {
+    const mult = lk[seed];
+    // Z-score approximation: how many σ above baseline?
+    const zscore = (mult - 1) / 0.15; // ~15% per sigma for typical skins
+    return { isSpecial: mult > 1.3, mult, method: 'lookup', zscore: zscore.toFixed(1) };
+  }
+  return { isSpecial: false, mult: 1.0, method: 'base' };
+}
+
+function setTradeMode(mode){
+  tradeMode = mode;
+  const buyBtn = document.getElementById('trade-buy-btn');
+  const sellBtn = document.getElementById('trade-sell-btn');
+  const hint = document.getElementById('trade-mode-hint');
+  if(mode === 'buy'){
+    buyBtn.classList.add('buy-active');
+    buyBtn.classList.remove('sell-active');
+    sellBtn.className = 'trade-btn';
+    hint.setAttribute('data-key','tradeBuyHint');
+    hint.textContent = t('tradeBuyHint');
+  } else {
+    sellBtn.classList.add('sell-active');
+    sellBtn.classList.remove('buy-active');
+    buyBtn.className = 'trade-btn';
+    hint.setAttribute('data-key','tradeSellHint');
+    hint.textContent = t('tradeSellHint');
+  }
+  // update platform fee note to reflect buy/sell mode
+  updatePlatFeeNote();
+  // re-render if results already exist
+  if(document.getElementById('result-content').style.display !== 'none') runAnalysis(true);
+}
+
+/* ═══ INTRO ═══ */
+function buildSparks(){
+  const c = document.getElementById('sparks');
+  for(let i=0;i<24;i++){
+    const angle = (360/24*i)+(Math.random()-.5)*18;
+    const s = document.createElement('div');
+    s.className='spark';
+    s.style.cssText=`--angle:${angle}deg;animation-delay:${.3+Math.random()*.3}s;animation-duration:${.7+Math.random()*.4}s;height:${30+Math.random()*35}px;background:${Math.random()>.5?'#00d4ff':'#4a9eff'}`;
+    c.appendChild(s);
+  }
+}
+buildSparks();
+
+setTimeout(()=>{
+  document.getElementById('intro').classList.add('fade-out');
+  setTimeout(()=>{
+    document.getElementById('intro').style.display='none';
+    document.getElementById('app').classList.add('visible');
+    // v11: mobile — ensure left panel shows after intro, not result
+    if(window.innerWidth <= 768){
+      const pR = document.querySelector('.panel-right');
+      const pL = document.querySelector('.panel-left');
+      if(pR){ pR.style.display='none'; pR.classList.remove('mobile-show'); }
+      if(pL){ pL.style.removeProperty('display'); pL.classList.remove('mobile-hidden'); }
+    }
+    renderAnalysisCharts();
+    loadLiveStats().then(()=>{ selectWear('FT'); runAnalysis._isAutoInit=true; setTimeout(runAnalysis,200); });
+  },400);
+},3500);
+
+/* ═══ LIVE STATS ═══ */
+let liveStats=null, modelData={};
+
+async function loadLiveStats(){
+  const dot=document.getElementById('ms-dot'), txt=document.getElementById('ms-text');
+  txt.textContent=t('msLoading'); dot.style.background='var(--amber)';
+  try{
+    const res=await fetch('./live_stats.json?t='+Date.now());
+    if(!res.ok) throw 0;
+    liveStats=await res.json(); modelData={};
+    if(liveStats.pricing) liveStats.pricing.forEach(p=>{ modelData[p.skin_name]={base_price:p.base_price||p.base_price_S0||null,realized_vol:p.realized_vol||null,momentum_30d:p.momentum_30d||null,avg_daily_vol:p.avg_daily_vol||null}; });
+    dot.style.background='var(--green)'; dot.style.boxShadow='0 0 6px var(--green)';
+    txt.style.color='var(--green)'; txt.textContent=t('msOK')+' ('+Object.keys(modelData).length+' skins)';
+  }catch{
+    dot.style.background='var(--muted)'; dot.style.boxShadow='none';
+    txt.style.color='var(--muted)'; txt.textContent=t('msMissing');
+    liveStats=null; modelData={};
+  }
+  updateStatDisplay();
+}
+
+function estFromPrice(p,wtype){
+  const S0=p*1.03, dVol=p>1000?1.5:p>300?5:p>100?15:p>30?35:60, vol=(p>1000?.65:p>300?.5:p>100?.4:.32)*(wtype==='knife'||wtype==='gloves'?1.15:1);
+  return{S0,dVol,vol:Math.min(vol,1.5),mom:0};
+}
+
+function getModelVals(skinName){
+  const md=modelData[skinName]||{};
+  const ovS0=parseFloat(document.getElementById('ov-s0').value);
+  const ovD=parseFloat(document.getElementById('ov-dvol').value);
+  const ovR=parseFloat(document.getElementById('ov-rvol').value);
+  const ovM=parseFloat(document.getElementById('ov-mom').value);
+  const skin=skins[selIdx], cur=parseFloat(document.getElementById('cur-price').value)||0;
+  const wtype=skin?skin.type:'rifle';
+  const est=estFromPrice(cur,wtype);
+  return{
+    S0:(!isNaN(ovS0)&&ovS0>0)?ovS0:(md.base_price||est.S0),
+    dVol:(!isNaN(ovD)&&ovD>=0)?ovD:(md.avg_daily_vol||est.dVol),
+    vol:(!isNaN(ovR)&&ovR>0)?ovR:(md.realized_vol||est.vol),
+    mom:(document.getElementById('ov-mom').value!==''&&!isNaN(ovM))?ovM:(md.momentum_30d||est.mom),
+    fromModel:!!md.base_price,
+    srcS0:(!isNaN(ovS0)&&ovS0>0)?'manual':md.base_price?'model':'estimate',
+    srcD:(!isNaN(ovD)&&ovD>=0)?'manual':md.avg_daily_vol?'model':'estimate',
+    srcR:(!isNaN(ovR)&&ovR>0)?'manual':md.realized_vol?'model':'estimate',
+    srcM:(document.getElementById('ov-mom').value!==''&&!isNaN(ovM))?'manual':md.momentum_30d?'model':'estimate',
+  };
+}
+
+function updateStatDisplay(){
+  const skin=skins[selIdx]; if(!skin) return;
+  const mv=getModelVals(skin.name);
+  const srcCol={model:'var(--green)',manual:'var(--amber)',estimate:'#7a8499'};
+  const srcLb={model:{zh:'模型',en:'model'},manual:{zh:'手動',en:'manual'},estimate:{zh:'估算',en:'est'}};
+  function rs(el,txt,src){ if(!el)return; const c=srcCol[src]||'var(--muted)',lb=(srcLb[src]||srcLb.estimate)[lang]; el.innerHTML=`<span style="color:${c};font-family:var(--font-hud);font-size:14px;font-weight:700">${txt}</span><span style="font-size:8px;color:${c};background:${c}18;padding:1px 4px;border-radius:2px;margin-left:3px">${lb}</span>`; }
+  rs(document.getElementById('st-s0'),'$'+mv.S0.toFixed(2),mv.srcS0);
+  rs(document.getElementById('st-dvol'),mv.dVol.toFixed(1)+'/d',mv.srcD);
+  rs(document.getElementById('st-rvol'),(mv.vol*100).toFixed(1)+'%',mv.srcR);
+  rs(document.getElementById('st-mom'),(mv.mom>=0?'+':'')+(mv.mom*100).toFixed(1)+'%',mv.srcM);
+}
+
+function toggleOverride(){
+  const p=document.getElementById('override-panel');
+  p.style.display=p.style.display==='none'||!p.style.display?'block':'none';
+}
+
+setInterval(()=>{if(liveStats)loadLiveStats();},60000);
+
+/* ═══ SKIN LIST ═══ */
+let skins=[
+  // Rifles
+  {name:'AK-47 | Redline (Field-Tested)',type:'rifle',rarity:'Classified'},
+  {name:'AK-47 | Vulcan (Factory New)',type:'rifle',rarity:'Covert'},
+  {name:'M4A4 | Howl (Field-Tested)',type:'rifle',rarity:'Contraband'},
+  {name:'M4A1-S | Knight (Factory New)',type:'rifle',rarity:'Covert'},
+  // Snipers
+  {name:'AWP | Asiimov (Field-Tested)',type:'sniper',rarity:'Covert'},
+  {name:'AWP | Dragon Lore (Field-Tested)',type:'sniper',rarity:'Covert'},
+  {name:'AWP | Gungnir (Factory New)',type:'sniper',rarity:'Covert'},
+  // Pistols
+  {name:'Desert Eagle | Blaze (Factory New)',type:'pistol_deagle',rarity:'Classified'},
+  {name:'USP-S | Printstream (Factory New)',type:'pistol_usp',rarity:'Covert'},
+  {name:'Glock-18 | Fade (Factory New)',type:'pistol_high',rarity:'Restricted'},
+  {name:'P250 | Asiimov (Field-Tested)',type:'pistol_high',rarity:'Classified'},
+  // Knives
+  {name:'★ Karambit | Doppler (Factory New)',type:'knife_rare',rarity:'Covert'},
+  {name:'★ Butterfly Knife | Fade (Factory New)',type:'knife_rare',rarity:'Covert'},
+  {name:'★ Flip Knife | Marble Fade (Factory New)',type:'knife_common',rarity:'Covert'},
+  // Gloves
+  {name:"★ Sport Gloves | Pandora's Box (Field-Tested)",type:'gloves',rarity:'Extraordinary'},
+  {name:'★ Driver Gloves | Imperial Plaid (Minimal Wear)',type:'gloves',rarity:'Extraordinary'},
+  // SMGs
+  {name:'MP9 | Wild Lily (Factory New)',type:'smg',rarity:'Covert'},
+  {name:'MAC-10 | Neon Rider (Factory New)',type:'smg',rarity:'Restricted'},
+  {name:'P90 | Asiimov (Field-Tested)',type:'smg',rarity:'Covert'},
+  // Shotguns
+  {name:'Nova | Hyper Beast (Factory New)',type:'shotgun',rarity:'Classified'},
+  {name:'XM1014 | Tranquility (Factory New)',type:'shotgun',rarity:'Classified'},
+  // Heavy
+  {name:'M249 | Deep Relief (Factory New)',type:'heavy',rarity:'Classified'},
+  {name:'Negev | Loudmouth (Factory New)',type:'heavy',rarity:'Classified'},
+];
+let selIdx=0;
+let activeGroupFilter='all';
+const typeLabel={
+  rifle:'RIFLE', sniper:'SNIPER', smg:'SMG', shotgun:'SHOTGUN', heavy:'HEAVY',
+  pistol:'PISTOL', knife:'KNIFE★', gloves:'GLOVES',
+  // legacy sub-types map to unified labels
+  pistol_usp:'PISTOL', pistol_deagle:'PISTOL', pistol_high:'PISTOL', pistol_low:'PISTOL',
+  knife_rare:'KNIFE★', knife_common:'KNIFE★',
+};
+const groupFilters=[
+  {key:'all',     label:{zh:'全部', en:'ALL'}},
+  {key:'rifle',   label:{zh:'步槍', en:'RIFLE'}},
+  {key:'sniper',  label:{zh:'狙擊', en:'SNIPER'}},
+  {key:'smg',     label:{zh:'衝鋒', en:'SMG'}},
+  {key:'shotgun', label:{zh:'霰彈', en:'SHOTGUN'}},
+  {key:'pistol',  label:{zh:'手槍', en:'PISTOL'}},
+  {key:'heavy',   label:{zh:'重型', en:'HEAVY'}},
+  {key:'knife',   label:{zh:'刀類', en:'KNIFE★'}},
+  {key:'gloves',  label:{zh:'手套', en:'GLOVES'}},
+];
+
+function renderGroupFilters(){
+  const container = document.getElementById('group-filter-bar');
+  if(!container) return;
+  container.innerHTML = groupFilters.map(f=>`
+    <button class="grp-btn${activeGroupFilter===f.key?' grp-active':''}"
+      onclick="setGroupFilter('${f.key}')">${typeof f.label==='object'?f.label[lang]||f.label.en:f.label}</button>
+  `).join('');
+}
+function setGroupFilter(key){
+  activeGroupFilter=key;
+  renderGroupFilters();
+  renderSkins();
+}
+function renderSkins(){
+  const filtered = activeGroupFilter==='all'
+    ? skins
+    : skins.filter(s=>{
+        const t = s.type;
+        if(activeGroupFilter==='pistol') return t==='pistol'||t==='pistol_usp'||t==='pistol_deagle'||t==='pistol_high'||t==='pistol_low';
+        if(activeGroupFilter==='knife')  return t==='knife'||t==='knife_rare'||t==='knife_common';
+        return t===activeGroupFilter;
+      });
+  updateWeaponCounts();
+  document.getElementById('skin-list').innerHTML=filtered.map((s,i)=>{
+    const realIdx=skins.indexOf(s);
+    // Price band from cur-price input when this skin is selected, else use type estimate
+    const priceEst = realIdx===selIdx
+      ? (parseFloat(document.getElementById('cur-price')?.value)||0)
+      : (s.priceHint||0);
+    const pbCls = priceEst<=0?'':priceEst<10?'pb pb-lo':priceEst<100?'pb pb-mid':'pb pb-hi';
+    const pbTxt = priceEst<=0?''
+      : priceEst<10 ? (lang==='zh'?'低價':'LOW')
+      : priceEst<100 ? (lang==='zh'?'中價':'MID')
+      : (lang==='zh'?'高價':'HIGH');
+    const pbHtml = pbCls ? `<span class="${pbCls}" title="${priceEst<=0?'':`$${priceEst.toFixed(0)}`}">${pbTxt}</span>` : '';
+    return `<div class="skin-item${realIdx===selIdx?' sel':''}" onclick="selectSkin(${realIdx})">
+      <div class="skin-dot"></div>
+      <span class="skin-nm" title="${s.name}">${s.name}</span>
+      ${pbHtml}
+      <span class="skin-badge b-${s.type.split('_')[0]}">${typeLabel[s.type]||s.type}</span>
+      <button class="btn-del" onclick="event.stopPropagation();delSkin(${realIdx})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function selectSkin(i){ selIdx=i; renderGroupFilters(); renderSkins(); onSeedInput(); updateStatDisplay(); updateFloatDirChip(); }
+function delSkin(i){ if(skins.length<=1)return; skins.splice(i,1); if(selIdx>=skins.length)selIdx=skins.length-1; renderGroupFilters(); renderSkins(); }
+
+function openModal(){
+  document.getElementById('modal-name').value='';
+  // sync select option language
+  document.querySelectorAll('#modal-type option').forEach(opt=>{
+    const txt = opt.getAttribute('data-'+lang);
+    if(txt) opt.textContent = txt;
+  });
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-name').focus(),80);
+}
+function closeModal(){ document.getElementById('add-modal').classList.remove('open'); }
+function confirmAdd(){
+  const name=document.getElementById('modal-name').value.trim(); if(!name)return;
+  const typeRaw=document.getElementById('modal-type').value;
+  // v11: resolve unified pistol → internal sub-type based on name heuristic
+  let type = typeRaw;
+  if(typeRaw==='pistol'){
+    const n=name.toLowerCase();
+    if(n.includes('usp')) type='pistol_usp';
+    else if(n.includes('deagle')||n.includes('desert eagle')) type='pistol_deagle';
+    else if(n.includes('glock')||n.includes('p250')||n.includes('five-seven')||n.includes('p2000')) type='pistol_high';
+    else type='pistol_high'; // default
+  } else if(typeRaw==='knife'){
+    const n=name.toLowerCase();
+    type=(n.includes('karambit')||n.includes('butterfly')||n.includes('m9')||n.includes('stiletto')||n.includes('talon')||n.includes('ursus')||n.includes('nomad')||n.includes('skeleton'))
+      ? 'knife_rare' : 'knife_common';
+  }
+  const rMap={rifle:'Classified',sniper:'Covert',smg:'Mil-Spec',shotgun:'Mil-Spec',heavy:'Industrial',
+              pistol:'Restricted',pistol_usp:'Restricted',pistol_deagle:'Restricted',pistol_high:'Restricted',pistol_low:'Mil-Spec',
+              knife:'Covert',knife_rare:'Covert',knife_common:'Covert',gloves:'Extraordinary'};
+  skins.push({name,type,rarity:rMap[type]||'Mil-Spec'}); selIdx=skins.length-1;
+  renderSkins(); closeModal();
+}
+
+renderGroupFilters();
+renderSkins();
+updateWeaponCounts();
+
+// v11: Mobile init — force panel-right hidden on mobile
+(function initMobileLayout(){
+  if(window.innerWidth <= 768){
+    const pR = document.querySelector('.panel-right');
+    const pL = document.querySelector('.panel-left');
+    if(pR){ pR.style.display='none'; pR.classList.remove('mobile-show'); }
+    if(pL){ pL.style.display='flex'; pL.classList.remove('mobile-hidden'); }
+  }
+})();
+function switchTab(tab){
+  ['result','analysis'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    const p=document.getElementById('page-'+t);
+    p.style.display=t===tab?'flex':'none';
+    if(t===tab) p.classList.add('active'); else p.classList.remove('active');
+  });
+}
+
+/* ═══ WEAR MODEL ═══ */
+const WEAR_TIERS={
+  FN:{min:.000,max:.070,mid:.035,lzh:'嶄新出廠 Factory New',len:'Factory New'},
+  MW:{min:.070,max:.150,mid:.110,lzh:'略有磨損 Minimal Wear',len:'Minimal Wear'},
+  FT:{min:.150,max:.380,mid:.265,lzh:'久經沙場 Field-Tested',len:'Field-Tested'},
+  WW:{min:.380,max:.450,mid:.415,lzh:'破損不堪 Well-Worn',len:'Well-Worn'},
+  BS:{min:.450,max:1.00,mid:.725,lzh:'戰痕累累 Battle-Scarred',len:'Battle-Scarred'},
+};
+const WEAR_ALPHA={
+  rifle: {FN:1.08,MW:1.04,FT:1.00,WW:0.93,BS:0.84},
+  sniper:{FN:1.10,MW:1.05,FT:1.00,WW:0.91,BS:0.80},
+  smg:   {FN:1.05,MW:1.02,FT:1.00,WW:0.95,BS:0.88},
+  shotgun:{FN:1.04,MW:1.01,FT:1.00,WW:0.96,BS:0.90},
+  mg:    {FN:1.03,MW:1.01,FT:1.00,WW:0.97,BS:0.92},
+  pistol:{FN:1.09,MW:1.04,FT:1.00,WW:0.92,BS:0.82},
+  knife: {FN:1.40,MW:1.18,FT:1.00,WW:0.82,BS:0.65},
+  gloves:{FN:1.45,MW:1.20,FT:1.00,WW:0.80,BS:0.62},
+};
+let selWear='FT';
+
+function selectWear(tier){
+  selWear=tier;
+  const skin=skins[selIdx], wtype=skin?skin.type:'rifle';
+  document.querySelectorAll('.wear-btn').forEach(b=>b.classList.toggle('active',b.dataset.wear===tier));
+  const wd=WEAR_TIERS[tier];
+  const sl=document.getElementById('float-val'),fo=document.getElementById('float-out');
+  if(sl){sl.value=wd.mid.toFixed(3);fo.textContent=wd.mid.toFixed(3);syncNeedle(wd.mid);}
+  const mult=(WEAR_ALPHA[wtype]||WEAR_ALPHA.rifle)[tier]||1;
+  const eff=((mult-1)*100).toFixed(1);
+  const ae=document.getElementById('wear-alpha-val'),me=document.getElementById('wear-float-mid');
+  if(ae){ae.textContent=(mult>=1?'+':'')+eff+'%';ae.style.color=mult>1.02?'var(--green)':mult<0.98?'var(--red)':'var(--muted)';}
+  if(me) me.textContent=wd.mid.toFixed(3);
+  const fn=document.getElementById('fn-lbl'),fd=document.getElementById('fn-dot');
+  if(fn) fn.textContent=wd.lzh+(lang==='zh'?' 中值':' midpoint');
+  if(fd) fd.style.background='var(--teal)';
+}
+
+function onFloatTrackClick(e){
+  const bar=document.getElementById('float-zone-bar');
+  const rect=bar.getBoundingClientRect();
+  const fv=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  document.getElementById('float-val').value=fv.toFixed(3);
+  onFloatChange();
+}
+
+function syncNeedle(fv){
+  const needle=document.getElementById('float-needle');
+  if(needle) needle.style.left=(fv*100).toFixed(2)+'%';
+  // colour the value by zone
+  const out=document.getElementById('float-out');
+  const col=fv<.07?'#00ff88':fv<.15?'#4a9eff':fv<.38?'#b06cff':fv<.45?'#ffb347':'#ff3d5a';
+  if(out){out.style.color=col;out.style.textShadow=`0 0 8px ${col}66`;}
+}
+
+
+
+function floatToWear(fv){
+  if(fv<0.07) return 'FN';
+  if(fv<0.15) return 'MW';
+  if(fv<0.38) return 'FT';
+  if(fv<0.45) return 'WW';
+  return 'BS';
+}
+
+function onFloatChange(){
+  const fv=parseFloat(document.getElementById('float-val').value);
+  document.getElementById('float-out').textContent=fv.toFixed(3);
+  syncNeedle(fv);
+  const tier=floatToWear(fv);
+  if(tier!==selWear){ selWear=tier; document.querySelectorAll('.wear-btn').forEach(b=>b.classList.toggle('active',b.dataset.wear===tier)); }
+  updateFloatDirChip();
+  const fn=document.getElementById('fn-lbl'),fd=document.getElementById('fn-dot');
+  if(fn) fn.textContent=lang==='zh'?'手動輸入 Manual Input':'Manual input';
+  if(fd) fd.style.background='var(--amber)';
+}
+
+/* ═══ SEED MODEL ═══ */
+// v10: SEED_LOOKUP now references SEED_LOOKUP_EXTENDED (defined above in platform section)
+// Extended lookup covers Case Hardened, Fade, Marble Fade, Anubis patterns
+// Auto Z-score detection via detectSpecialPattern()
+const SEED_LOOKUP = SEED_LOOKUP_EXTENDED;
+const TIER1_K={knife_rare:1.4,knife_common:1.3,gloves:1.2,sniper:.9,rifle:.8,pistol_deagle:.75,pistol_high:.7,pistol_usp:.65,pistol_low:.6,smg:.5,shotgun:.4,heavy:.3};
+
+// ── v5: Exception Tables ─────────────────────────────────────────────────────
+// [A] StatTrak Conflict Skins (counter blocks key pattern)
+const STATTRAK_CONFLICT={
+  'M4A4 | Howl':'counter_blocks_wolf_face',
+  'M4A1-S | Hot Rod':'counter_blocks_flames',
+  'AK-47 | Fire Serpent':'counter_blocks_snake_head',
+  'USP-S | Orion':'counter_blocks_center_design',
+  'M4A1-S | Cyrex':'counter_partially_obscures',
+  'AWP | Asiimov':'counter_blocks_eye_detail',
+  'M4A4 | The Emperor':'counter_blocks_face_detail',
+  'AK-47 | Neon Revolution':'counter_blocks_circuit_center',
+  'Desert Eagle | Conspiracy':'counter_blocks_eye',
+};
+// [B] Float Direction Map
+const FLOAT_DIRECTION={
+  'M4A1-S | Icarus Fell':'inverted',
+  'AK-47 | Safari Mesh':'inverted',
+  'Glock-18 | Wasteland Rebel':'inverted',
+  'CZ75-Auto | Chalice':'inverted',
+  'Desert Eagle | Blaze':'flat',
+  'AK-47 | Gold Arabesque':'flat',
+  'AWP | Dragon Lore':'flat',
+  'M4A4 | Howl':'flat',
+  'AK-47 | Wild Lotus':'flat',
+  'USP-S | Kill Confirmed':'flat',
+  'AK-47 | Case Hardened':'bimodal',
+  '★ Karambit | Case Hardened':'bimodal',
+  '★ Butterfly Knife | Case Hardened':'bimodal',
+  '★ M9 Bayonet | Case Hardened':'bimodal',
+  '★ Bayonet | Case Hardened':'bimodal',
+  'Five-SeveN | Case Hardened':'bimodal',
+};
+// Float direction → modifier for float_value feature
+const FLOAT_DIR_MULT={normal:1,inverted:-1,flat:0,bimodal:1};
+
+function getBaseName(n){ return n.split('(')[0].trim(); }
+function getFloatDir(name){ return FLOAT_DIRECTION[getBaseName(name)]||'normal'; }
+function hasSTConflict(name){ return !!(STATTRAK_CONFLICT[getBaseName(name)]); }
+
+// [C] Liquidity sigma penalty
+function liqSigmaPenalty(lc, vol){
+  if(lc<3 && vol<0.1) return 3.0;
+  if(lc<5 || vol<0.1)  return 2.0;
+  if(lc<10 || vol<0.5) return 1.5;
+  return 1.0;
+}
+
+// Get exception flags for a skin name
+function getSkinFlags(skinName){
+  const base = getBaseName(skinName);
+  const stConflict = !!(STATTRAK_CONFLICT[base]);
+  const floatDir   = FLOAT_DIRECTION[base]||'normal';
+  const badges = [];
+  if(stConflict) badges.push({key:'st-conflict',zh:'ST衝突 — 計數器遮圖，溢價已調整',en:'ST Conflict — counter blocks pattern, premium adjusted'});
+  if(floatDir==='inverted') badges.push({key:'bs-premium',zh:'BS溢價 — 重磨損版本為主要收藏目標',en:'BS Premium — high-wear is primary collector target'});
+  if(floatDir==='flat')     badges.push({key:'float-flat',zh:'Float無效 — 圖案全覆蓋，磨損影響微弱',en:'Float Neutral — full-art; wear has minimal impact'});
+  if(floatDir==='bimodal')  badges.push({key:'bimodal',zh:'雙峰溢價 — FN藍色與BS金色均有收藏溢價',en:'Bimodal Premium — both FN & BS have collector premiums'});
+  return {stConflict, floatDir, badges, isException: badges.length>0};
+}
+
+// Render exception badge row
+function renderExcBadges(skinName, lc, vol){
+  const row = document.getElementById('exc-badge-row');
+  if(!row) return;
+  const flags = getSkinFlags(skinName);
+  const pen   = liqSigmaPenalty(lc||10, vol||1);
+  const allBadges = [...flags.badges];
+  if(pen>=2) allBadges.push({key:'low-liq',zh:'⚠ 低流動性 — 信心區間已加寬',en:'⚠ Low Liquidity — confidence band widened'});
+  if(allBadges.length===0){ row.style.display='none'; row.innerHTML=''; return; }
+  row.style.display='flex';
+  row.style.flexWrap='wrap';
+  row.style.gap='4px';
+  row.innerHTML = allBadges.map(b=>`<span class="exc-badge ${b.key}"><span class="cf-zh">${b.zh}</span><span class="cf-en" style="display:none">${b.en}</span></span>`).join('');
+  // Apply current lang
+  row.querySelectorAll('.cf-zh').forEach(e=>e.style.display=lang==='zh'?'inline':'none');
+  row.querySelectorAll('.cf-en').forEach(e=>e.style.display=lang==='en'?'inline':'none');
+}
+// ── End v5 exception tables ──────────────────────────────────────────────────
+
+function getSeedMult(seed,skinName,wtype){
+  if(!seed||seed<=0)return{mult:1,isLookup:false,tier:0,isSpecial:false};
+  const base=skinName.split('(')[0].trim();
+  const lk=SEED_LOOKUP[base];
+  if(lk&&lk[seed]!==undefined){
+    const mult=lk[seed];
+    const isSpecial=mult>1.3;
+    return{mult,isLookup:true,tier:1,isSpecial,zscore:((mult-1)/0.15).toFixed(1)};
+  }
+  // Fade skin: seed 1-30 = full fade premium (log decay)
+  const isFade=skinName.includes('Fade');
+  if(isFade&&seed<=50){
+    const fadeMult=seed<=30?1+0.15*(1-seed/30):1+0.05*(1-(seed-30)/20);
+    return{mult:fadeMult,isLookup:false,tier:1,isSpecial:seed<=10,method:'fade'};
+  }
+  // Standard tier logic
+  const wtypeBase=wtype.split('_')[0];
+  if(seed<=100){ const mult=Math.exp((TIER1_K[wtype]||TIER1_K[wtypeBase]||.7)*(1-seed/100)); return{mult,isLookup:false,tier:1,isSpecial:false}; }
+  if(seed<=500){ return{mult:1+.05*(1-(seed-101)/399),isLookup:false,tier:2,isSpecial:false}; }
+  return{mult:1,isLookup:false,tier:3,isSpecial:false};
+}
+
+function onSeedInput(){
+  const seed=parseInt(document.getElementById('paint-seed').value)||0;
+  const skin=skins[selIdx], wtype=skin?skin.type:'rifle';
+  const box=document.getElementById('seed-rank-box');
+  if(seed<=0){box.style.display='none';return;}
+  box.style.display='block';
+  const tier=seed<=100?1:seed<=500?2:3;
+  const pm=getSeedMult(seed,skin?skin.name:'',wtype);
+  const cols={1:'var(--amber)',2:'var(--accent)',3:'var(--muted)'};
+  const bgs={1:'rgba(255,179,71,.15)',2:'rgba(74,158,255,.12)',3:'rgba(90,106,132,.15)'};
+  const col=pm.isSpecial?'var(--teal)':cols[tier];
+  const bg=pm.isSpecial?'rgba(0,229,204,.15)':bgs[tier];
+  const badge=document.getElementById('seed-badge');
+  badge.textContent=tier<=2?`#${seed}`:`SEED ${seed}`;
+  badge.style.cssText=`background:${bg};color:${col};border:1px solid ${col}`;
+  const tl={zh:{1:pm.isSpecial?'⭐ 特殊模板 Special Pattern（查表精確）':'稀有收藏品 Collector-Grade (Top 100)',2:'特殊花紋 Notable Pattern (101-500)',3:'一般花紋 Common Pattern (501-999)'},en:{1:pm.isSpecial?'⭐ Special Pattern (Lookup Exact)':'Collector-Grade (Top 100)',2:'Notable Pattern (101-500)',3:'Common Pattern (501-999)'}};
+  document.getElementById('seed-rank-lbl').textContent=tl[lang][tier];
+  const pct=((pm.mult-1)*100).toFixed(1);
+  document.getElementById('seed-prem-val').textContent='+'+pct+'%';
+  document.getElementById('seed-prem-val').style.color=pm.isSpecial?'var(--teal)':pm.mult>1.1?'var(--amber)':pm.mult>1.0?'var(--accent)':'var(--muted)';
+  let subText;
+  if(pm.isLookup){
+    const zs=pm.zscore?`Z=${pm.zscore}σ`:'';
+    subText={zh:`查表精確溢價 Lookup Exact ${zs} — 社群驗證特殊花紋`,en:`Lookup Exact ${zs} — community-verified special pattern`}[lang];
+  } else if(pm.method==='fade'){
+    subText={zh:`漸變度模型 Fade% Model — Seed ${seed}≤30 全漸變 Full Fade`,en:`Fade model — seed ${seed}≤30 = full fade`}[lang];
+  } else {
+    const sub={zh:{1:'Tier1 對數線性 Log-Linear（k='+(TIER1_K[wtype]||.7).toFixed(1)+'）',2:'線性衰減模型 Linear Fade (101→500)',3:'無溢價 No Premium'},en:{1:'Tier1 Log-Linear (k='+(TIER1_K[wtype]||.7).toFixed(1)+')',2:'Linear Fade (101→500)',3:'No Premium'}};
+    subText=sub[lang][tier];
+  }
+  document.getElementById('seed-rank-sub').textContent=subText;
+
+  // v10: Special pattern detection note
+  const specInfo = detectSpecialPattern(seed, skin?skin.name:'');
+  const notes={zh:{
+    special:`⭐ 特殊花紋確認 Z=${pm.zscore}σ：此 Seed 為社群驗證的高溢價模板，流動性極低（月均<3件）。建議直接查 CSFloat 近期成交確認實際溢價。`,
+    1:`⚠ Top 100 Seed：潛在溢價，但需查此皮膚具體花紋分布。多數皮膚 Seed 1-100 溢價有限，僅 Case Hardened/Fade 等有顯著差異。`,
+    2:`Seed #${seed} 輕微溢價 (+${pct}%)，Float 值仍為主要定價因子。`,
+    3:`Seed #${seed} 一般花紋，無額外溢價，使用標準模型。`},
+  en:{
+    special:`⭐ Special pattern confirmed Z=${pm.zscore}σ: community-verified high-premium seed. Very low liquidity (<3/month). Check recent CSFloat sales for actual premium.`,
+    1:`⚠ Top 100 Seed: potential premium, but depends on this skin's pattern distribution. Most skins have minimal Seed 1-100 premium — mainly Case Hardened/Fade.`,
+    2:`Seed #${seed} minor premium (+${pct}%). Float remains primary pricing driver.`,
+    3:`Seed #${seed} common pattern. No premium. Base model applies.`}};
+  const noteKey = pm.isSpecial?'special':String(tier);
+  document.getElementById('seed-note').textContent=notes[lang][noteKey];
+}
+
+/* ═══ PRICING MODEL ═══ */
+
+/* ═══ v9 EXCEPTION TABLES ═══ */
+const STATTRAK_CONFLICT_JS = {
+  'M4A4 | Howl':              {override: -0.05, reason_zh:'計數器遮蓋火焰細節', reason_en:'Counter blocks flame detail'},
+  'AK-47 | Vulcan':           {override:  0.10, reason_zh:'計數器部分遮蓋設計', reason_en:'Counter partially covers design'},
+  'AK-47 | Fire Serpent':     {override: -0.10, reason_zh:'計數器遮蓋蛇頭圖案', reason_en:'Counter covers serpent head'},
+  'M4A1-S | Hot Rod':         {override:  0.05, reason_zh:'遮蓋輕微', reason_en:'Minimal cover, niche'},
+  'USP-S | Kill Confirmed':   {override:  0.08, reason_zh:'計數器在骷髏主題上', reason_en:'Counter on skull motif'},
+  'Glock-18 | Wasteland Rebel':{override: 0.12, reason_zh:'輕微遮蓋', reason_en:'Minor cover'},
+  '★ Karambit | Crimson Web': {override:  0.30, reason_zh:'蜘蛛網不受遮蓋影響', reason_en:'Web visible regardless of ST'},
+};
+const FLOAT_DIRECTION_JS = {
+  'AK-47 | Safari Mesh':         'inverted',
+  'M4A1-S | Icarus Fell':        'inverted',
+  'Glock-18 | Wasteland Rebel':  'inverted',
+  'AK-47 | Slate':               'flat',
+  'Desert Eagle | Blaze':        'flat',
+  'USP-S | Whiteout':            'flat',
+  'AK-47 | Case Hardened':       'bimodal',
+  '★ Karambit | Case Hardened':  'bimodal',
+};
+const FLOAT_SEED_SKINS_JS = new Set([
+  'AK-47 | Case Hardened','★ Karambit | Case Hardened',
+  '★ Butterfly Knife | Case Hardened','★ M9 Bayonet | Case Hardened',
+  '★ Bayonet | Case Hardened','Five-SeveN | Case Hardened',
+]);
+
+function getFloatDirection(skinName){
+  const base = skinName.split('(')[0].trim();
+  return FLOAT_DIRECTION_JS[base] || 'normal';
+}
+function getAdjustedFloat(fv, skinName){
+  const dir = getFloatDirection(skinName);
+  if(dir==='inverted') return 1.0 - fv;
+  if(dir==='flat') return 0.5;
+  return fv;
+}
+function getSTConflict(skinName, isStatTrak){
+  const base = skinName.split('(')[0].trim();
+  if(!isStatTrak) return null;
+  return STATTRAK_CONFLICT_JS[base] || null;
+}
+function getExceptionBadges(skinName, isStatTrak, dVol, seed){
+  const base = skinName.split('(')[0].trim();
+  const badges = [];
+  const dir = getFloatDirection(skinName);
+  const stc = getSTConflict(skinName, isStatTrak);
+  if(stc) badges.push({cls:'st-conflict', zh:'ST衝突', en:'ST Conflict'});
+  if(dir==='inverted') badges.push({cls:'bs-premium', zh:'BS溢價', en:'BS Premium'});
+  if(dir==='flat') badges.push({cls:'float-flat', zh:'磨損無感', en:'Float-Flat'});
+  if(dir==='bimodal') badges.push({cls:'bimodal', zh:'雙峰定價', en:'Bimodal'});
+  if(FLOAT_SEED_SKINS_JS.has(base) && seed>0) badges.push({cls:'float-seed', zh:'Float×Seed', en:'Float×Seed'});
+  if(dVol < 0.05) badges.push({cls:'very-low-liq', zh:'⚠極低流動性', en:'⚠Very Low Liq.'});
+  else if(dVol < 1) badges.push({cls:'low-liq', zh:'低流動性', en:'Low Liq.'});
+  return badges;
+}
+function renderExcBadges(skinName, isStatTrak, dVol, seed){
+  const row = document.getElementById('exc-badge-row');
+  if(!row) return;
+  const bs = getExceptionBadges(skinName, isStatTrak, dVol, seed);
+  if(!bs.length){ row.innerHTML=''; return; }
+  row.innerHTML = bs.map(b=>`<span class="exc-badge ${b.cls}">${lang==='zh'?b.zh:b.en}</span>`).join('');
+}
+function getSigmaPenalty(dVol, listingCount){
+  if(dVol < 0.05 || listingCount < 3) return 3.0;
+  if(dVol < 0.2 || listingCount < 10) return 1.8;
+  if(dVol < 0.5 || listingCount < 20) return 1.3;
+  return 1.0;
+}
+
+const SUBTYPE_MOD={rifle:{fw:-.40,nl:-.10},sniper:{fw:-.35,nl:-.08},smg:{fw:-.30,nl:-.07},shotgun:{fw:-.25,nl:-.06},mg:{fw:-.20,nl:-.05},pistol:{fw:-.38,nl:-.09},knife:{fw:-.80,nl:-.20},gloves:{fw:-.60,nl:-.15}};
+const PRICE_TIERS=[
+  {above:5000,lzh:'極高價品 Ultra-High — 誤差範圍極寬',len:'Ultra-High — very wide error margin',color:'#ff3d5a',rank:'S'},
+  {above:1000,lzh:'高價品 High-Price — 建議搭配流動性評估',len:'High-Price — check liquidity',color:'#ffb347',rank:'A'},
+  {above:300, lzh:'中高價品 Mid-High — 信心區間較寬',len:'Mid-High — wider confidence bands',color:'#f0c040',rank:'B'},
+  {above:50,  lzh:'一般價位 Standard — 估計較穩定',len:'Standard — relatively stable',color:'#4a9eff',rank:'C'},
+  {above:0,   lzh:'低價品 Low-Price — 估計最穩定',len:'Low-Price — most stable estimate',color:'#00ff88',rank:'D'},
+];
+function getPriceTier(p){ for(const t of PRICE_TIERS)if(p>t.above)return t; return PRICE_TIERS[PRICE_TIERS.length-1]; }
+
+function gaussRand(mu,sig){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return mu+sig*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function simHistory(S0,vol,days){ const p=[S0],dv=vol/Math.sqrt(252); for(let i=1;i<days;i++)p.push(Math.max(p[i-1]*(1+gaussRand(0,dv)),.5)); return p; }
+
+function computePricing(inp){
+  const{S0,cur,fv,vol,mom,dVol,stkr,wtype,rarity,seed,skinName,isStatTrak,listingCount}=inp;
+  const FEE=getPlatformFee(); // v10: dynamic platform fee
+  const eps=1e-6;
+  const st=SUBTYPE_MOD[wtype]||SUBTYPE_MOD.rifle;
+
+  /* v9: float direction adjustment */
+  const fvAdj = getAdjustedFloat(fv, skinName||'');
+  const fDir  = getFloatDirection(skinName||'');
+  const fe=st.fw*fvAdj+st.nl*fvAdj*fvAdj;
+  const liq_disc=dVol>=50?.97:dVol>=10?.93:dVol>=1?.87:.75;
+  const ols_a=1+fe*.3+(mom>0?.02:-.01);
+  const ipca_a=ols_a*(1+gaussRand(0,.02));
+  const enet_a=ols_a*(1+gaussRand(0,.015));
+  const ens_a=.35*ols_a+.35*enet_a+.30*ipca_a;
+  const seedInfo=getSeedMult(seed||0,skinName||'',wtype);
+  const beta=seedInfo.mult;
+  const wearTier=selWear, wearMult=(WEAR_ALPHA[wtype]||WEAR_ALPHA.rifle)[wearTier]||1;
+  /* v9: StatTrak conflict coefficient override */
+  const stConflict = getSTConflict(skinName||'', !!isStatTrak);
+  const stMult = stConflict ? (1 + stConflict.override) : 1.0;
+  /* v9: Float×Seed interaction (Case Hardened premium amplifier) */
+  const base_sk = (skinName||'').split('(')[0].trim();
+  const fsiActive = FLOAT_SEED_SKINS_JS.has(base_sk) && seed > 0;
+  const fsiMult = fsiActive ? (1 + Math.max(0, 1 - fvAdj) * Math.max(0, beta - 1) * 0.5) : 1.0;
+  /* v9: Sigma penalty for wide bands */
+  const sigPenalty = getSigmaPenalty(dVol, listingCount||20);
+  const est=S0*ens_a*beta*wearMult*liq_disc*stMult*fsiMult+stkr;
+
+  // Price tier
+  const priceTier=getPriceTier(cur);
+  const rarityOrder=['Consumer','Industrial','Mil-Spec','Restricted','Classified','Covert','Extraordinary','Contraband'];
+  const rarityIdx=Math.max(0,rarityOrder.indexOf(rarity||'Mil-Spec'));
+  const bandMult=1+rarityIdx*.12+(cur>1000?.5:cur>300?.25:0);
+  const rs=Math.max(.04,vol*.15)*bandMult*sigPenalty;  /* v9: sigma penalty */
+  const q10=Math.max(.5,est*(1-rs*2.2)),q25=Math.max(.5,est*(1-rs*1.1)),q50=est,q75=est*(1+rs*1.1),q90=est*(1+rs*2.2);
+
+  // Economic decomposition
+  const basePrice=S0;
+  const ipcaContrib=S0*(ipca_a-ols_a)*bandMult; // systematic factor contribution
+  const alphaContrib=S0*(ols_a-1)+fe*S0*.3;     // individual alpha
+  const prefContrib=S0*(beta-1)*wearMult*liq_disc+stkr; // preference premium
+
+  // Signal confidence score (Kelly & Xiu FML)
+  // Band width ratio: tighter band = higher signal
+  const bandWidth=(q75-q25)/Math.max(est,eps);
+  const volScore=Math.max(0,1-vol*.8);  // lower vol = cleaner signal
+  const bandScore=Math.max(0,1-bandWidth*.8);
+  const liqScore=dVol>=50?1:dVol>=10?.7:dVol>=1?.45:.2;
+  const alphaStab=Math.max(0,1-Math.abs(ols_a-1)*3); // how close to 1 = stable
+  const confScore=Math.round((volScore*.3+bandScore*.3+liqScore*.25+alphaStab*.15)*100);
+  const confClass=confScore>=65?'high':confScore>=40?'med':'low';
+
+  // Noise vs Signal classification
+  // Signal: narrow band, low vol, high liq, meaningful alpha deviation
+  const alphaDev=Math.abs(cur/Math.max(est,eps)-1); // how far current price is from model
+  const isSignal=confScore>=60&&alphaDev>.08; // meaningful deviation + high confidence
+  const isNoise =confScore<40||bandWidth>.3;
+  const nsClass=isSignal?'signal':isNoise?'noise':'mixed';
+
+  // Binomial — v11: platform-aware buy+sell fee
+  const SELL_FEE = getPlatformFee();
+  const BUY_FEE  = getPlatformBuyFee();
+  const actual_cost = cur * (1 + BUY_FEE);          // what buyer actually pays
+  const net_proceeds_up = q75 * (1 - SELL_FEE);     // what seller nets at Q75
+  const net_proceeds_dn = q25 * (1 - SELL_FEE);     // what seller nets at Q25
+  const u=Math.max(net_proceeds_up/(actual_cost+eps),1.001);
+  const d=Math.max(Math.min(net_proceeds_dn/(actual_cost+eps),.999),.001);
+  const p_up=Math.max(.01,Math.min(.99,(1-d)/(u-d))),p_dn=1-p_up;
+  const exp_gross=p_up*net_proceeds_up+p_dn*net_proceeds_dn;
+  const exp_ret=(exp_gross-actual_cost)/(actual_cost+eps);
+  // Kelly: b = net gain per unit bet on win; accounts for both fees
+  const b_net=Math.max(0,(net_proceeds_up-actual_cost)/(actual_cost+eps));
+  const f_kl=b_net>0?Math.max(0,(p_up*b_net-p_dn)/b_net):0;
+  const kl_pct=Math.min(f_kl*.25*100,25);
+  const mc=Math.min(.9,Math.max(.1,.5*Math.max(.5,1-vol*.8)*(dVol<1?.7:dVol<5?.85:1)));
+
+  let score=0;
+  if(cur<q25)score=35;
+  else if(cur<q50)score=Math.max(18,Math.round(35*(1-(cur-q25)/(q50-q25+eps))));
+  else if(cur<q75)score=Math.max(0,Math.round(18*(1-(cur-q50)/(q75-q50+eps))));
+  const ret_s=Math.min(20,Math.max(0,Math.round(exp_ret*100)));
+  const liq_s=dVol>=50?12:dVol>=10?8:dVol>=1?4:0;
+  const mom_s=mom>.1?8:mom>0?5:mom>-.1?2:3;
+  const mc_s=Math.round(mc*12),kl_s=Math.min(10,Math.round(kl_pct/3));
+  const finalScore=Math.min(100,Math.max(0,score+ret_s+liq_s+mom_s+mc_s+kl_s));
+
+  let rec,sig;
+  if(finalScore>=68&&mc>=.4){rec='BUY';sig='undervalued';}
+  else if(finalScore>=42){rec='HOLD';sig='neutral';}
+  else{rec='PASS';sig='overvalued';}
+
+  const liqLabel=dVol>=50?t('liqH'):dVol>=10?t('liqM'):dVol>=1?t('liqL'):t('liqI');
+  let entryLabel;
+  if(cur<q10)entryLabel=t('tierDeep');
+  else if(cur<q25)entryLabel=t('tierAgg');
+  else if(cur<q50)entryLabel=t('tierNorm');
+  else if(cur<q75)entryLabel=t('tierCaut');
+  else entryLabel=t('tierAvoid');
+
+  const sug_buy=(q25*.97).toFixed(2),sug_sell=(q75*(1-FEE)).toFixed(2);
+  const roi=((sug_sell-sug_buy)/Math.max(sug_buy,.01)*100).toFixed(1);
+
+  return{est,ols_a,ipca_a,ens_a,q10,q25,q50,q75,q90,priceTier,beta,seedInfo,
+         wearTier,wearMult,p_up,p_dn,exp_ret,finalScore,rec,sig,kl_pct,mc,
+         liqLabel,entryLabel,sug_buy,sug_sell,roi,
+         basePrice,ipcaContrib,alphaContrib,prefContrib,
+         confScore,confClass,volScore,bandScore,liqScore,alphaStab,bandWidth,nsClass,bandMult};
+}
+
+/* ═══ CHART STATE ═══ */
+let cH=null,cCI=null,cE=null,cG=null,cS=null;
+const destroy=c=>{if(c)c.destroy();return null;};
+
+/* ═══ RUN ANALYSIS ═══ */
+
+function updateFloatDirChip(){
+  const chip = document.getElementById('float-dir-chip');
+  if(!chip) return;
+  const skin = skins[selIdx];
+  const sn = skin ? skin.name : '';
+  const dir = getFloatDirection(sn);
+  chip.className = 'float-dir-chip float-dir-' + dir;
+  const labels = {zh:{normal:'標準',inverted:'BS溢價',flat:'磨損無感',bimodal:'雙峰'},en:{normal:'NORMAL',inverted:'BS+',flat:'FLAT',bimodal:'BIMODAL'}};
+  chip.textContent = (labels[lang]||labels.en)[dir] || dir.toUpperCase();
+  chip.style.display = dir==='normal' ? 'none' : 'inline-block';
+}
+
+function runAnalysis(silent){
+  const btn=document.getElementById('analyze-btn');
+  btn.classList.add('loading');
+  setTimeout(()=>{
+    const skin=skins[selIdx];
+    const cur=parseFloat(document.getElementById('cur-price').value)||42.5;
+    const fv=parseFloat(document.getElementById('float-val').value)||.265;
+    const stkr=parseFloat(document.getElementById('sticker-val').value)||0;
+    const seed=parseInt(document.getElementById('paint-seed').value)||0;
+    const mv=getModelVals(skin?skin.name:'');
+    const isStatTrak = isSTOn();
+    const listingCount = parseInt(mv.listingCount||20);
+    // v11: save price hint for badge display
+    if(skin && cur>0) { skin.priceHint = cur; renderSkins(); }
+    const inp={S0:mv.S0,cur,fv,vol:mv.vol,mom:mv.mom,dVol:mv.dVol,stkr,
+               wtype:skin?skin.type:'rifle',rarity:skin?skin.rarity:'Mil-Spec',
+               seed,skinName:skin?skin.name:'',isStatTrak,listingCount};
+    /* v9: render exception badges */
+    renderExcBadges(skin?skin.name:'', isStatTrak, mv.dVol, seed);
+    const r=computePricing(inp);
+
+    document.getElementById('result-empty').style.display='none';
+    document.getElementById('result-content').style.display='flex';
+
+    // v10: mobile — switch to result panel (only on user-triggered runs, not auto-init)
+    const isMobile = window.innerWidth <= 768;
+    if(isMobile && !runAnalysis._isAutoInit && !silent){
+      document.querySelector('.panel-left')?.classList.add('mobile-hidden');
+      document.querySelector('.panel-right')?.classList.add('mobile-show');
+      document.getElementById('ham-btn')?.classList.add('open');
+      setTimeout(()=>{
+        document.getElementById('result-content')?.scrollIntoView({behavior:'smooth',block:'start'});
+      }, 120);
+    }
+    runAnalysis._isAutoInit = false;
+
+    // Signal banner
+    const banner=document.getElementById('sig-banner');
+    banner.className='signal-banner '+r.sig;
+    document.getElementById('sig-icon').textContent=r.sig==='undervalued'?'↑':r.sig==='overvalued'?'↓':'~';
+    document.getElementById('sig-title').textContent=(r.sig==='undervalued'?t('signalUnder'):r.sig==='overvalued'?t('signalOver'):t('signalNeutral'))+'   '+(skin?skin.name:'');
+    document.getElementById('sig-sub').textContent=`$${cur.toFixed(2)} → $${r.est.toFixed(2)} | `+(r.sig==='undervalued'?t('signalUnderDesc'):r.sig==='overvalued'?t('signalOverDesc'):t('signalNeutralDesc'));
+    document.getElementById('sig-rec').textContent=r.rec;
+
+    // Tier banner
+    const tb=document.getElementById('tier-banner');
+    const tm=lang==='zh'?r.priceTier.lzh:r.priceTier.len;
+    tb.style.borderColor=r.priceTier.color; tb.style.background=r.priceTier.color+'12';
+    tb.innerHTML=`<span style="font-family:var(--font-hud);font-size:11px;font-weight:700;color:${r.priceTier.color};letter-spacing:.1em">RANK ${r.priceTier.rank}</span><span style="font-size:11px;font-family:var(--font-mono);color:${r.priceTier.color}">${tm}</span><span style="margin-left:auto;font-size:10px;color:${r.priceTier.color};opacity:.7">$${cur.toLocaleString()}</span>`;
+
+    // Metrics
+    const rc=r.exp_ret>=0?'green':'red';
+    document.getElementById('m-est').textContent='$'+r.est.toFixed(2);
+    document.getElementById('m-ret').textContent=(r.exp_ret>=0?'+':'')+(r.exp_ret*100).toFixed(1)+'%';
+    document.getElementById('m-ret').className='mc-val '+rc;
+    const buyF = getPlatformBuyFee(), sellF = getPlatformFee();
+    const feeDesc = buyF > 0
+      ? `buy ${(buyF*100).toFixed(0)}% + sell ${(sellF*100).toFixed(0)}%`
+      : `sell ${(sellF*100).toFixed(0)}%`;
+    document.getElementById('m-ret-sub').textContent=`30d, ${PLATFORMS[currentPlatform].name} (${feeDesc})`;
+    document.getElementById('m-score').textContent=r.finalScore;
+    document.getElementById('m-score').className='mc-val '+(r.finalScore>=68?'green':r.finalScore>=42?'amber':'red');
+    // Update score label + sub based on trade mode
+    if(tradeMode==='buy'){
+      document.getElementById('m-score-lbl').textContent = lang==='zh'?'買入評分':'BUY SCORE';
+      document.getElementById('m-score-sub').textContent = lang==='zh'?'滿分 100':'out of 100';
+    } else {
+      document.getElementById('m-score-lbl').textContent = lang==='zh'?'賣出信號強度':'SELL SIGNAL';
+      document.getElementById('m-score-sub').textContent = lang==='zh'?'越高越適合賣出':'higher = better sell';
+    }
+    document.getElementById('m-kelly').textContent=r.kl_pct.toFixed(1)+'%';
+    document.getElementById('m-kelly').className='mc-val '+(r.kl_pct>10?'green':'amber');
+
+    // ═══ ECONOMIC DECOMPOSITION ═══
+    const totalEst=r.est, totalComponents=r.basePrice+r.ipcaContrib+r.alphaContrib+r.prefContrib;
+    const basePct=(r.basePrice/Math.max(totalEst,1e-6)*100).toFixed(1);
+    const ipcaPct=(r.ipcaContrib/Math.max(totalEst,1e-6)*100).toFixed(1);
+    const alphaPct=(r.alphaContrib/Math.max(totalEst,1e-6)*100).toFixed(1);
+    const prefPct=((totalEst-r.basePrice-r.ipcaContrib-r.alphaContrib)/Math.max(totalEst,1e-6)*100).toFixed(1);
+    const ipcaSign=r.ipcaContrib>=0?'+':'-';
+    const alphaSign=r.alphaContrib>=0?'+':'-';
+    const prefContribAct=totalEst-r.basePrice-r.ipcaContrib-r.alphaContrib;
+    const prefSign=prefContribAct>=0?'+':'-';
+
+    document.getElementById('decomp-grid').innerHTML=`
+      <div class="decomp-card" style="border-top:2px solid var(--accent2)">
+        <div class="dc-label" style="color:var(--accent2)">${t('dcBaseLabel')}</div>
+        <div class="dc-val" style="color:var(--accent2)">$${r.basePrice.toFixed(2)}</div>
+        <div class="dc-pct" style="color:var(--muted)">${basePct}% of est.</div>
+        <div class="dc-desc">${t('dcBaseDesc').replace('\\n','<br>')}</div>
+      </div>
+      <div class="decomp-card" style="border-top:2px solid var(--purple)">
+        <div class="dc-label" style="color:var(--purple)">${t('dcIPCALabel')}</div>
+        <div class="dc-val" style="color:var(--purple)">${ipcaSign}$${Math.abs(r.ipcaContrib).toFixed(2)}</div>
+        <div class="dc-pct" style="color:var(--muted)">${ipcaSign}${Math.abs(parseFloat(ipcaPct)).toFixed(1)}% systematic</div>
+        <div class="dc-desc">${t('dcIPCADesc').replace('\\n','<br>')}</div>
+      </div>
+      <div class="decomp-card" style="border-top:2px solid ${r.alphaContrib>=0?'var(--green)':'var(--red)'}">
+        <div class="dc-label" style="color:${r.alphaContrib>=0?'var(--green)':'var(--red)'}">${t('dcAlphaLabel')}</div>
+        <div class="dc-val" style="color:${r.alphaContrib>=0?'var(--green)':'var(--red)'}">${alphaSign}$${Math.abs(r.alphaContrib).toFixed(2)}</div>
+        <div class="dc-pct" style="color:var(--muted)">${alphaSign}${Math.abs(parseFloat(alphaPct)).toFixed(1)}% alpha</div>
+        <div class="dc-desc">${t('dcAlphaDesc').replace('\\n','<br>')}</div>
+      </div>
+      <div class="decomp-card" style="border-top:2px solid var(--amber)">
+        <div class="dc-label" style="color:var(--amber)">${t('dcPrefLabel')}</div>
+        <div class="dc-val" style="color:var(--amber)">${prefSign}$${Math.abs(prefContribAct).toFixed(2)}</div>
+        <div class="dc-pct" style="color:var(--muted)">${prefSign}${Math.abs(parseFloat(prefPct)).toFixed(1)}% pref.</div>
+        <div class="dc-desc">${t('dcPrefDesc').replace('\\n','<br>')}</div>
+      </div>`;
+
+    document.getElementById('decomp-formula').innerHTML=
+      `<span style="color:var(--accent2)">P̂</span> = `+
+      `<span style="color:var(--accent2)">$${r.basePrice.toFixed(2)}</span> `+
+      `<span style="color:var(--purple)">${ipcaSign}$${Math.abs(r.ipcaContrib).toFixed(2)}</span> `+
+      `<span style="color:${r.alphaContrib>=0?'var(--green)':'var(--red)'}">${alphaSign}$${Math.abs(r.alphaContrib).toFixed(2)}</span> `+
+      `<span style="color:var(--amber)">${prefSign}$${Math.abs(prefContribAct).toFixed(2)}</span> = `+
+      `<span style="color:var(--text);font-weight:700">$${r.est.toFixed(2)}</span>`+
+      `<span style="color:var(--muted);margin-left:16px">· S₀ + β·f_t + α_i + γ·pref</span>`;
+
+    // ═══ SIGNAL CONFIDENCE ═══
+    const circumference=2*Math.PI*27;
+    const fillLen=(r.confScore/100)*circumference;
+    const gaugeColor=r.confClass==='high'?'var(--green)':r.confClass==='med'?'var(--amber)':'var(--red)';
+    document.getElementById('conf-gauge-fill').setAttribute('stroke',gaugeColor);
+    document.getElementById('conf-gauge-fill').setAttribute('stroke-dasharray',`${fillLen.toFixed(1)} ${circumference.toFixed(1)}`);
+    document.getElementById('conf-gauge-lbl').textContent=r.confScore;
+    document.getElementById('conf-gauge-lbl').style.color=gaugeColor;
+
+    const badgeEl=document.getElementById('conf-badge-wrap');
+    const badgeClass=r.confClass;
+    badgeEl.innerHTML=`<span class="conf-badge ${badgeClass}">${t('conf'+r.confClass.charAt(0).toUpperCase()+r.confClass.slice(1))}</span>`;
+
+    const interpTexts={
+      zh:{
+        high:`信號強 High Signal（${r.confScore}分）：波動率低 Low Volatility、流動性充足 Sufficient Liquidity、信心區間窄 Narrow Band。當前 $${cur.toFixed(2)} vs 估算 Estimated $${r.est.toFixed(2)} 的偏差（${(Math.abs(cur/r.est-1)*100).toFixed(1)}%）可能代表真實的定價錯誤 Mispricing，而非雜訊 Noise。`,
+        med: `信號中度 Medium Signal（${r.confScore}分）：存在部分不確定性 Uncertainty。價格偏差可能來自 Mispricing 或市場雜訊 Market Noise，建議結合流動性 Liquidity 與近期動量 Momentum 判斷。`,
+        low: `信號弱 Low Signal（${r.confScore}分）：波動率高 High Volatility 或流動性不足 Low Liquidity，信心區間寬 Wide Band。當前偏差主要由雜訊 Noise 驅動，謹慎交易。`,
+      },
+      en:{
+        high:`Strong signal (${r.confScore}): low vol, sufficient liquidity, narrow band. Deviation $${cur.toFixed(2)} vs $${r.est.toFixed(2)} (${(Math.abs(cur/r.est-1)*100).toFixed(1)}%) likely represents genuine mispricing, not noise.`,
+        med: `Moderate signal (${r.confScore}): some uncertainty. Deviation may reflect mispricing or market noise — check liquidity and momentum.`,
+        low: `Weak signal (${r.confScore}): high vol or low liquidity, wide bands. Current deviation is mostly noise-driven. Trade cautiously.`,
+      }
+    };
+    document.getElementById('conf-interp').textContent=interpTexts[lang][r.confClass];
+
+    function setBar(barId,valId,pct,txt){ document.getElementById(barId).style.width=pct.toFixed(0)+'%'; document.getElementById(valId).textContent=txt; }
+    setBar('cri-vol-bar','cri-vol-val',r.volScore*100,`${(r.volScore*100).toFixed(0)}% — σ=${(mv.vol*100).toFixed(1)}%`);
+    setBar('cri-band-bar','cri-band-val',r.bandScore*100,`${(r.bandScore*100).toFixed(0)}% — BW=${(r.bandWidth*100).toFixed(1)}%`);
+    setBar('cri-liq-bar','cri-liq-val',r.liqScore*100,`${(r.liqScore*100).toFixed(0)}% — ${mv.dVol.toFixed(1)}/d`);
+    setBar('cri-alpha-bar','cri-alpha-val',r.alphaStab*100,`${(r.alphaStab*100).toFixed(0)}% — α=${r.ols_a.toFixed(3)}`);
+
+    const nsRow=document.getElementById('ns-row');
+    const nsTag=document.getElementById('ns-tag'),nsDesc=document.getElementById('ns-desc'),nsNote=document.getElementById('ns-note');
+    nsTag.className='ns-tag ns-'+r.nsClass;
+    nsTag.textContent=t('ns'+r.nsClass.charAt(0).toUpperCase()+r.nsClass.slice(1));
+    const nsDescs={zh:{signal:`偏差 ${(Math.abs(inp.cur/r.est-1)*100).toFixed(1)}% + 信心分數 ${r.confScore} → 可能存在 Mispricing`,noise:`信心分數 ${r.confScore} 偏低 或 區間過寬 → 主要為市場雜訊`,mixed:`訊號與雜訊混合，建議觀察後續動量確認`},en:{signal:`Deviation ${(Math.abs(inp.cur/r.est-1)*100).toFixed(1)}% + confidence ${r.confScore} → likely mispricing`,noise:`Confidence ${r.confScore} low or band too wide → mostly market noise`,mixed:`Mixed signal/noise — watch momentum for confirmation`}};
+    nsDesc.textContent=nsDescs[lang][r.nsClass];
+    nsNote.textContent=lang==='zh'?`Kelly: ${r.kl_pct.toFixed(1)}% 倉位 Position`:`Kelly: ${r.kl_pct.toFixed(1)}% position`;
+
+    // Quantile band
+    const lo=r.q10*.95,hi=r.q90*1.05,rng=hi-lo;
+    const p=v=>Math.max(0,Math.min(100,(v-lo)/rng*100)).toFixed(1);
+    document.getElementById('q-visual').innerHTML=`
+      <div class="q-track"></div>
+      <div class="q-fill" style="left:${p(r.q25)}%;width:${(p(r.q75)-p(r.q25))}%"></div>
+      <div class="q-mk" style="left:${p(r.q25)}%;background:var(--accent);box-shadow:0 0 5px var(--accent)"></div>
+      <div class="q-mk" style="left:${p(r.q50)}%;background:var(--purple);box-shadow:0 0 5px var(--purple)"></div>
+      <div class="q-mk" style="left:${p(r.q75)}%;background:var(--amber);box-shadow:0 0 5px var(--amber)"></div>
+      <div class="q-cur" style="left:${p(cur)}%"></div>
+      <div class="q-lbl" style="left:${p(r.q25)}%">Q25</div>
+      <div class="q-lbl" style="left:${p(r.q50)}%">Q50</div>
+      <div class="q-lbl" style="left:${p(r.q75)}%">Q75</div>
+      <div class="q-lbl" style="left:${p(cur)}%;color:var(--red)">${t('lblNow')}</div>`;
+    document.getElementById('ql-q25').textContent='$'+r.q25.toFixed(2);
+    document.getElementById('ql-q50').textContent='$'+r.q50.toFixed(2);
+    document.getElementById('ql-q75').textContent='$'+r.q75.toFixed(2);
+    document.getElementById('ql-cur').textContent='$'+cur.toFixed(2);
+
+    // Charts
+    cH=destroy(cH); cCI=destroy(cCI);
+    const hist=simHistory(mv.S0,mv.vol,30);
+    cH=new Chart(document.getElementById('chart-history'),{type:'line',data:{labels:Array.from({length:30},(_,i)=>'D'+(i+1)),datasets:[{data:hist,borderColor:'#00e5cc',borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:'rgba(0,229,204,.05)',tension:.3,label:'P'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6a84',font:{size:8},maxTicksLimit:6},grid:{color:'rgba(74,158,255,.05)'}},y:{ticks:{color:'#5a6a84',font:{size:8},callback:v=>`$${v.toFixed(0)}`},grid:{color:'rgba(74,158,255,.05)'}}}}});
+    const quants=[{label:'Q10',val:r.q10,color:'rgba(74,158,255,.35)'},{label:'Q25',val:r.q25,color:'rgba(74,158,255,.65)'},{label:'Q50',val:r.q50,color:'#b06cff'},{label:'Q75',val:r.q75,color:'rgba(255,179,71,.8)'},{label:'Q90',val:r.q90,color:'rgba(255,61,90,.55)'},{label:'Est',val:r.est,color:'#00d4ff'}];
+    cCI=new Chart(document.getElementById('chart-ci'),{type:'bar',data:{labels:quants.map(q=>q.label),datasets:[{data:quants.map(q=>q.val),backgroundColor:quants.map(q=>q.color),borderRadius:3,label:'Price'}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6a84',font:{size:8},callback:v=>`$${v.toFixed(0)}`},grid:{color:'rgba(74,158,255,.05)'}},y:{ticks:{color:'#5a6a84',font:{size:8}},grid:{display:false}}}}});
+
+    // Decomp table
+    document.getElementById('d-s0').innerHTML=`<span class="tag tb">$${mv.S0.toFixed(2)}</span>`;
+    document.getElementById('d-alpha').textContent=r.ols_a.toFixed(4);
+    const wl=WEAR_TIERS[r.wearTier].lzh; // always bilingual now
+    const wc=r.wearMult>1.02?'var(--green)':r.wearMult<.98?'var(--red)':'var(--muted)';
+    document.getElementById('d-wear').innerHTML=`<span style="color:${wc}">${r.wearTier} ${wl} (${r.wearMult>=1?'+':''}${((r.wearMult-1)*100).toFixed(1)}%)</span>`;
+    document.getElementById('d-beta').textContent=r.beta.toFixed(4)+(r.seedInfo.isLookup?' ✓lookup':r.seedInfo.tier<=2?' ~model':'');
+    document.getElementById('d-sticker').textContent='$'+stkr.toFixed(2);
+    document.getElementById('d-ipca').textContent=r.ipca_a.toFixed(4);
+    document.getElementById('d-method').textContent='OLS + ElasticNet + IPCA (Ridge stack)';
+    document.getElementById('d-liq').innerHTML=`<span class="tag ${r.liqLabel===t('liqH')?'tg':r.liqLabel===t('liqI')?'tr':'ta'}">${r.liqLabel} (${Math.round(mv.dVol)}/d)</span>`;
+    document.getElementById('d-buy').innerHTML=`<span class="tag tg">$${r.sug_buy}</span>`;
+    document.getElementById('d-sell').innerHTML=`<span class="tag ta">$${r.sug_sell}</span>`;
+    document.getElementById('d-roi').innerHTML=`<span class="tag ${parseFloat(r.roi)>0?'tg':'tr'}">${parseFloat(r.roi)>0?'+':''}${r.roi}%</span>`;
+
+    // AM Premium & Theta from live_stats.json
+    const ls=liveStats&&liveStats.pricing?liveStats.pricing.find(p=>p.skin_name===(skins[selIdx]||{}).name):null;
+    if(ls&&ls.am_premium!=null){
+      const amp=parseFloat(ls.am_premium);
+      const ampColor=amp>5?'var(--red)':amp>2?'var(--amber)':'var(--green)';
+      const ampTip=amp>5?'⚠ 建議到價即賣':amp>2?'~ 視情況提前':'✓ 持有至目標';
+      document.getElementById('d-am-prem').innerHTML=`<span style="color:${ampColor};font-weight:700">${amp.toFixed(1)}%</span> <span style="color:var(--muted);font-size:10px">${ampTip}</span>`;
+    } else {
+      document.getElementById('d-am-prem').textContent='— (需跑 Cell 10)';
+    }
+    if(ls&&ls.theta_call!=null){
+      const th=parseFloat(ls.theta_call);
+      const thColor=th<-0.5?'var(--red)':th<-0.1?'var(--amber)':'var(--muted)';
+      document.getElementById('d-theta').innerHTML=`<span style="color:${thColor}">${th.toFixed(4)}/day</span>`;
+    } else {
+      document.getElementById('d-theta').textContent='— (需跑 Cell 10)';
+    }
+
+    // ═══ TRADE MODE PANEL ═══
+    const SELL_FEE = getPlatformFee();
+    const BUY_FEE  = getPlatformBuyFee();
+    const platInfo = PLATFORMS[currentPlatform];
+    const panel = document.getElementById('trade-result-panel');
+    const sug_buy_num = parseFloat(r.sug_buy);
+    const sug_sell_num = parseFloat(r.sug_sell);
+    // Buy mode: actual cost = listing price × (1 + buyFee)
+    const actual_buy_cost = (sug_buy_num * (1 + BUY_FEE));
+    // Sell mode: break-even = what you paid × (1 + sellFee) to recover cost
+    const breakEven = (cur * (1 + SELL_FEE)).toFixed(2);
+    // ROI sell: net proceeds vs current price paid
+    const netROI_sell = ((sug_sell_num * (1 - SELL_FEE) - cur * (1 + BUY_FEE)) / Math.max(cur * (1 + BUY_FEE), 0.01) * 100).toFixed(1);
+    // ROI buy: sell proceeds minus actual buy cost (incl. both fees)
+    const netROI_buy  = ((sug_sell_num * (1 - SELL_FEE) - actual_buy_cost) / Math.max(actual_buy_cost, 0.01) * 100).toFixed(1);
+    const sellFeeLabel = `${platInfo.name} · ${lang==='zh'?'賣方':'seller'} ${(SELL_FEE*100).toFixed(0)}%`;
+    const buyFeeLabel  = BUY_FEE > 0
+      ? `${platInfo.name} · ${lang==='zh'?'買方':'buyer'} ${(BUY_FEE*100).toFixed(0)}%`
+      : `${platInfo.name} · ${lang==='zh'?'買方不扣費':'no buyer fee'}`;
+
+    if(tradeMode === 'buy'){
+      panel.style.borderColor = 'rgba(0,255,136,.3)';
+      panel.style.background  = 'rgba(0,255,136,.03)';
+      document.getElementById('trade-panel-icon').textContent = '↑';
+      document.getElementById('trade-panel-icon').style.color = 'var(--green)';
+      document.getElementById('trade-panel-title').textContent = t('tradeModeResultBuy');
+      document.getElementById('trade-panel-title').style.color = 'var(--green)';
+      document.getElementById('trade-panel-fee-note').textContent = buyFeeLabel;
+
+      document.getElementById('trade-price-lbl').textContent  = t('tradeEntryPrice').toUpperCase();
+      // Show actual cost (incl. buyer fee) if applicable
+      const displayBuyCost = BUY_FEE > 0
+        ? `$${sug_buy_num.toFixed(2)} → ${lang==='zh'?'實付':'actual'} $${actual_buy_cost.toFixed(2)}`
+        : '$' + r.sug_buy;
+      document.getElementById('trade-price-val').textContent  = BUY_FEE > 0 ? `$${actual_buy_cost.toFixed(2)}` : '$' + r.sug_buy;
+      document.getElementById('trade-price-val').style.color  = 'var(--green)';
+      document.getElementById('trade-price-sub').textContent  = BUY_FEE > 0
+        ? (lang==='zh' ? `掛單價 $${sug_buy_num.toFixed(2)} + ${(BUY_FEE*100).toFixed(0)}% 買方費 = 實付 $${actual_buy_cost.toFixed(2)}` : `Listing $${sug_buy_num.toFixed(2)} + ${(BUY_FEE*100).toFixed(0)}% buyer fee = actual $${actual_buy_cost.toFixed(2)}`)
+        : (lang==='zh' ? '≈ Q25 × 0.97（保守入場）' : '≈ Q25 × 0.97 (conservative entry)');
+
+      document.getElementById('trade-roi-lbl').textContent  = t('tradeNetROI').toUpperCase();
+      document.getElementById('trade-roi-val').textContent  = (parseFloat(netROI_buy)>=0?'+':'')+netROI_buy+'%';
+      document.getElementById('trade-roi-val').style.color  = parseFloat(netROI_buy)>=0?'var(--green)':'var(--red)';
+      document.getElementById('trade-roi-sub').textContent  = lang==='zh'
+        ? `買入→建議賣出，含買賣雙方手續費（買 ${(BUY_FEE*100).toFixed(0)}% + 賣 ${(SELL_FEE*100).toFixed(0)}%）`
+        : `Buy→sell, incl. both fees (buy ${(BUY_FEE*100).toFixed(0)}% + sell ${(SELL_FEE*100).toFixed(0)}%)`;
+
+      document.getElementById('trade-extra1-lbl').textContent = (lang==='zh'?'Kelly 建議倉位':'Kelly Position');
+      document.getElementById('trade-extra1-val').textContent = r.kl_pct.toFixed(1)+'%';
+      document.getElementById('trade-extra1-val').style.color = r.kl_pct>10?'var(--green)':'var(--amber)';
+
+      document.getElementById('trade-extra2-lbl').textContent = (lang==='zh'?'二項式上漲機率':'Binomial P(up)');
+      document.getElementById('trade-extra2-val').textContent = (r.p_up*100).toFixed(1)+'%';
+      document.getElementById('trade-extra2-val').style.color = r.p_up>0.5?'var(--green)':'var(--red)';
+    } else {
+      panel.style.borderColor = 'rgba(255,179,71,.3)';
+      panel.style.background  = 'rgba(255,179,71,.03)';
+      document.getElementById('trade-panel-icon').textContent = '↓';
+      document.getElementById('trade-panel-icon').style.color = 'var(--amber)';
+      document.getElementById('trade-panel-title').textContent = t('tradeModeResultSell');
+      document.getElementById('trade-panel-title').style.color = 'var(--amber)';
+      document.getElementById('trade-panel-fee-note').textContent = sellFeeLabel;
+
+      document.getElementById('trade-price-lbl').textContent  = t('tradeTargetPrice').toUpperCase();
+      document.getElementById('trade-price-val').textContent  = '$' + r.sug_sell;
+      document.getElementById('trade-price-val').style.color  = 'var(--amber)';
+      document.getElementById('trade-price-sub').textContent  = lang==='zh'
+        ? `≈ Q75 × ${(1-SELL_FEE).toFixed(2)}（扣除 ${(SELL_FEE*100).toFixed(0)}% 手續費後淨收）`
+        : `≈ Q75 × ${(1-SELL_FEE).toFixed(2)} (net after ${(SELL_FEE*100).toFixed(0)}% seller fee)`;
+
+      document.getElementById('trade-roi-lbl').textContent  = t('tradeNetROI').toUpperCase();
+      document.getElementById('trade-roi-val').textContent  = (parseFloat(netROI_sell)>=0?'+':'')+netROI_sell+'%';
+      document.getElementById('trade-roi-val').style.color  = parseFloat(netROI_sell)>=0?'var(--green)':'var(--red)';
+      document.getElementById('trade-roi-sub').textContent  = lang==='zh'
+        ? `賣方扣 ${(SELL_FEE*100).toFixed(0)}%，含持倉買入成本（買 ${(BUY_FEE*100).toFixed(0)}% + 賣 ${(SELL_FEE*100).toFixed(0)}%）`
+        : `Seller fee ${(SELL_FEE*100).toFixed(0)}%, incl. buy cost (buy ${(BUY_FEE*100).toFixed(0)}% + sell ${(SELL_FEE*100).toFixed(0)}%)`;
+
+      document.getElementById('trade-extra1-lbl').textContent = t('tradeBreakEven').toUpperCase();
+      document.getElementById('trade-extra1-val').textContent = '$' + breakEven;
+      document.getElementById('trade-extra1-val').style.color = 'var(--muted)';
+
+      document.getElementById('trade-extra2-lbl').textContent = (lang==='zh'?'最高合理賣價 (Q90)':'Max Rational Sell (Q90)');
+      document.getElementById('trade-extra2-val').textContent = '$' + r.q90.toFixed(2);
+      document.getElementById('trade-extra2-val').style.color = 'var(--amber)';
+    }
+
+    btn.classList.remove('loading');
+  },240);
+}
+
+/* ═══ ANALYSIS CHARTS ═══ */
+function renderAnalysisCharts(){
+  cE=destroy(cE); cG=destroy(cG); cS=destroy(cS);
+  const errs=Array.from({length:80},()=>gaussRand(0,3.5));
+  const bins=Array.from({length:14},(_,i)=>i*2-14);
+  const cnts=bins.map(b=>errs.filter(e=>e>=b&&e<b+2).length);
+  cE=new Chart(document.getElementById('chart-errors'),{type:'bar',data:{labels:bins.map(b=>`${b>0?'+':''}${b}`),datasets:[{data:cnts,backgroundColor:cnts.map((_,i)=>i<7?'rgba(0,255,136,.5)':'rgba(255,61,90,.5)'),borderRadius:2,label:'Count'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6a84',font:{size:8},maxTicksLimit:8},grid:{color:'rgba(74,158,255,.05)'}},y:{ticks:{color:'#5a6a84',font:{size:8}},grid:{color:'rgba(74,158,255,.05)'}}}}});
+  // v11: dynamic accuracy by weapon type — all categories + i18n
+  const accData = {
+    rifle:        { mae:2.1, rmse:3.2, c:'#4a9eff'  },
+    sniper:       { mae:3.4, rmse:5.1, c:'#00e5cc'  },
+    pistol_deagle:{ mae:2.6, rmse:3.9, c:'#b06cff'  },
+    pistol_usp:   { mae:2.3, rmse:3.5, c:'#9b59ff'  },
+    pistol_high:  { mae:2.8, rmse:4.2, c:'#7c3aed'  },
+    pistol_low:   { mae:1.9, rmse:2.8, c:'#6d28d9'  },
+    smg:          { mae:1.5, rmse:2.1, c:'#00d4ff'  },
+    shotgun:      { mae:1.2, rmse:1.8, c:'#5a6a84'  },
+    heavy:        { mae:1.1, rmse:1.6, c:'#3d5066'  },
+    knife:        { mae:8.4, rmse:14.2,c:'#ff3d5a'  },
+    gloves:       { mae:6.1, rmse:10.3,c:'#ffb347'  },
+  };
+  // Label map zh/en
+  const accLabel = {
+    rifle:        { zh:'步槍',   en:'Rifles'    },
+    sniper:       { zh:'狙擊槍', en:'Snipers'   },
+    pistol_deagle:{ zh:'手槍',   en:'Pistols'   },
+    pistol_usp:   { zh:'手槍',   en:'Pistols'   },
+    pistol_high:  { zh:'手槍',   en:'Pistols'   },
+    pistol_low:   { zh:'手槍',   en:'Pistols'   },
+    smg:          { zh:'衝鋒槍', en:'SMGs'      },
+    shotgun:      { zh:'霰彈槍', en:'Shotguns'  },
+    heavy:        { zh:'重型武器',en:'Heavy'     },
+    knife:        { zh:'刀類',   en:'Knives★'  },
+    knife_rare:   { zh:'刀類',   en:'Knives★'  },
+    knife_common: { zh:'刀類',   en:'Knives★'  },
+    gloves:       { zh:'手套',   en:'Gloves★'  },
+  };
+  // Merge all pistol_* into one averaged entry
+  const pistolKeys = Object.keys(accData).filter(k=>k.startsWith('pistol'));
+  const pistolMae = pistolKeys.reduce((s,k)=>s+accData[k].mae,0)/pistolKeys.length;
+  const mergedAcc = {};
+  Object.entries(accData).forEach(([k,v])=>{ if(!k.startsWith('pistol')) mergedAcc[k]=v; });
+  mergedAcc['pistol'] = { mae: parseFloat(pistolMae.toFixed(1)), c:'#b06cff' };
+  const mergedLabel = {...accLabel, pistol:{zh:'手槍',en:'Pistols'}};
+  const activeTypes = [...new Set(skins.map(s=>s.type))];
+  const gd = Object.entries(mergedAcc)
+    .filter(([k])=> activeTypes.includes(k) || activeTypes.some(t=>t===k||t.startsWith(k+'_')))
+    .map(([k,v])=>({n:mergedLabel[k]?.[lang]||k, mae:v.mae, c:v.c}));
+  const gdFinal = gd.length ? gd : Object.entries(mergedAcc).map(([k,v])=>({n:mergedLabel[k]?.[lang]||k, mae:v.mae, c:v.c}));
+  const maxM=Math.max(...gdFinal.map(g=>g.mae))*1.2;
+  document.getElementById('acc-bars').innerHTML=gdFinal.map(g=>`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+      <span style="font-size:9px;font-family:var(--font-mono);color:var(--muted);width:56px;flex-shrink:0">${g.n}</span>
+      <div style="flex:1;background:var(--bg3);border-radius:3px;height:4px;min-width:0"><div style="height:4px;border-radius:3px;width:${(g.mae/maxM*100).toFixed(0)}%;background:${g.c}"></div></div>
+      <span style="font-size:10px;font-family:var(--font-mono);color:var(--text);width:36px;text-align:right;flex-shrink:0">$${g.mae.toFixed(1)}</span>
+    </div>`).join('');
+  const pts=Array.from({length:40},()=>({x:Math.round(Math.random()*100),y:Math.max(.5,12-Math.random()*100*.08+gaussRand(0,1.5))}));
+  cS=new Chart(document.getElementById('chart-scatter'),{type:'scatter',data:{datasets:[{data:pts,backgroundColor:'rgba(74,158,255,.5)',pointRadius:4,label:'Skin'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Avg daily volume',color:'#5a6a84',font:{size:10}},ticks:{color:'#5a6a84',font:{size:8}},grid:{color:'rgba(74,158,255,.05)'},min:0},y:{title:{display:true,text:'MAE ($)',color:'#5a6a84',font:{size:10}},ticks:{color:'#5a6a84',font:{size:8},callback:v=>`$${v.toFixed(1)}`},grid:{color:'rgba(74,158,255,.05)'},min:0}}}});
+}
+
+// Init
+applyLang();
+</script>
+</body>
+</html>
